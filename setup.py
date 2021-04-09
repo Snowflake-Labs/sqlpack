@@ -9,6 +9,7 @@ setup(
     author='Siddhil Rathod',
     author_email='siddhi.rathod@snowflake.com',
     url='https://github.com/Snowflake-Labs/sqlpack',
+    download_url = 'https://github.com/Snowflake-Labs/sqlpacks/archive/refs/tags/0.1.0.tar.gz',
     scripts=['bin/sqlpack'],
     keywords='SNOWFLAKE PACKS SNOWSQL SNOWSQL-PACKS',
     install_requires=[
