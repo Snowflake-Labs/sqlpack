@@ -10,6 +10,10 @@
 -- - name: subdomain
 -- - name: snowflake_api_integration
 -- - name: snowflake_warehouse
+-- - name: ingest_users_schedule
+--   default: 'USING CRON 0 0 * * * UTC'
+-- - name: ingest_groups_schedule
+--   default: 'USING CRON 0 0 * * * UTC'
 -- varmap:
 --   table_name: 'okta_{connection_name}'
 --   landing_table: '{table_name}'
@@ -19,7 +23,7 @@
 --   okta_domain: '{subdomain}.okta.com'
 --   ingest_logs_task: okta_{connection_name}_logs_ingest
 --   ingest_users_task: okta_{connection_name}_users_ingest
---   ingest_group_task: okta_{connection_name}_groups_ingest
+--   ingest_groups_task: okta_{connection_name}_groups_ingest
 
 
 -- landing tables for data and views to reference it
@@ -219,7 +223,7 @@ ALTER TASK {ingest_logs_task} RESUME;
 
 CREATE OR REPLACE TASK {ingest_users_task}
   WAREHOUSE={snowflake_warehouse}
-  SCHEDULE='USING CRON * * * * * UTC'
+  SCHEDULE='{ingest_users_schedule}'
 AS
 INSERT INTO {landing_user_table}
 SELECT
@@ -243,9 +247,9 @@ FROM (
 ALTER TASK {ingest_users_task} RESUME;
 
 
-CREATE OR REPLACE TASK {ingest_group_task}
+CREATE OR REPLACE TASK {ingest_groups_task}
   WAREHOUSE={snowflake_warehouse}
-  SCHEDULE='USING CRON * * * * * UTC'
+  SCHEDULE='{ingest_groups_schedule}'
 AS
 INSERT INTO {landing_group_table}
 SELECT
@@ -265,4 +269,4 @@ FROM (
   SELECT okta_api_{connection_name}_groups() result
 ), LATERAL FLATTEN ( input => result )
 ;
-ALTER TASK {ingest_group_task} RESUME;
+ALTER TASK {ingest_groups_task} RESUME;
