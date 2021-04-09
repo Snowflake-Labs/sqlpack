@@ -185,7 +185,7 @@ USING (
     SELECT okta_api_{connection_name}_logs(
       IFNULL(
         (SELECT MAX(published) FROM {landing_log_table}),
-        CURRENT_TIMESTAMP - INTERVAL '10 minutes'
+        CURRENT_TIMESTAMP - INTERVAL '60 minutes'
       )
     ) result
   ), LATERAL FLATTEN ( input => result )
