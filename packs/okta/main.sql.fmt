@@ -1,0 +1,268 @@
+-- ---
+-- params:
+-- - name: connection_name
+--   default: 'default'
+-- - name: aws_api_gateway_id
+-- - name: aws_api_gateway_region
+-- - name: aws_api_gateway_stage_name
+--   default: 'test'
+-- - name: okta_api_token
+-- - name: subdomain
+-- - name: snowflake_api_integration
+-- - name: snowflake_warehouse
+-- varmap:
+--   table_name: 'okta_{connection_name}'
+--   landing_table: '{table_name}'
+--   landing_log_table: '{table_name}_system_logs'
+--   landing_user_table: '{table_name}_users'
+--   landing_group_table: '{table_name}_groups'
+--   okta_domain: '{subdomain}.okta.com'
+--   ingest_logs_task: okta_{connection_name}_logs_ingest
+--   ingest_users_task: okta_{connection_name}_users_ingest
+--   ingest_group_task: okta_{connection_name}_groups_ingest
+
+
+-- landing tables for data and views to reference it
+
+CREATE OR REPLACE TABLE {landing_log_table} (
+    recorded_At TIMESTAMP_LTZ (9),
+    raw VARIANT,
+    uuid STRING,
+    published TIMESTAMP_LTZ,
+    eventType STRING,
+    version STRING,
+    severity STRING,
+    legacyEventType STRING,
+    displayMessage STRING,
+    actor VARIANT,
+    client VARIANT,
+    request VARIANT,
+    outcome VARIANT,
+    target VARIANT,
+    transaction VARIANT,
+    debugContext VARIANT,
+    authenticationContext VARIANT,
+    securityContext VARIANT
+);
+
+CREATE OR REPLACE TABLE {landing_user_table} (
+    recorded_At TIMESTAMP_LTZ(9),
+    raw VARIANT,
+    id STRING,
+    status STRING,
+    created TIMESTAMP_LTZ,
+    activated TIMESTAMP_LTZ,
+    statusChanged TIMESTAMP_LTZ,
+    lastLogin TIMESTAMP_LTZ,
+    lastUpdated TIMESTAMP_LTZ,
+    passwordChanged TIMESTAMP_LTZ,
+    profile VARIANT,
+    credentials VARIANT,
+    _links VARIANT
+);
+
+CREATE OR REPLACE TABLE {landing_group_table} (
+    recorded_At TIMESTAMP_LTZ(9),
+    raw VARIANT,
+    id STRING,
+    created TIMESTAMP_LTZ,
+    lastUpdated TIMESTAMP_LTZ,
+    lastMembershipUpdated TIMESTAMP_LTZ,
+    objectClass VARIANT,
+    type STRING,
+    profile VARIANT,
+    _links VARIANT,
+    users VARIANT,
+    apps VARIANT
+);
+
+CREATE OR REPLACE VIEW okta_snowbiz_users_latest AS
+SELECT *
+FROM {landing_user_table}
+WHERE recorded_At > CURRENT_TIMESTAMP - INTERVAL '24 hours'
+QUALIFY 1=ROW_NUMBER() OVER (
+  PARTITION BY profile:login
+  ORDER BY recorded_At DESC
+)
+;
+
+
+-- external functions for accessing data
+
+CREATE OR REPLACE SECURE EXTERNAL FUNCTION okta_api_{connection_name}(path STRING, params STRING)
+RETURNS VARIANT
+RETURNS NULL ON NULL INPUT
+VOLATILE
+MAX_BATCH_ROWS=1
+COMMENT='okta_api_{connection_name}: (path STRING) -> response'
+API_INTEGRATION={snowflake_api_integration}
+HEADERS=(
+  'base-url'='https://{okta_domain}'
+  'url'='{0}'
+  'params'='{1}'
+  'auth'='{"host":"{okta_domain}","authorization":"SSWS {okta_api_token}"}'
+)
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/https'
+;
+
+CREATE OR REPLACE FUNCTION urlencode("obj" VARIANT) RETURNS STRING
+LANGUAGE JAVASCRIPT
+AS $$
+var ret = [];
+for (var p in obj)
+if (obj.hasOwnProperty(p)) {
+  var v = obj[p];
+  v = v instanceof Date ? v.toISOString() : v;
+  ret.push(encodeURIComponent(p) + "=" + encodeURIComponent(v));
+}
+return ret.join("&");
+$$
+;
+
+
+-- logs
+
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_logs(since TIMESTAMP_LTZ, limit NUMBER) RETURNS VARIANT
+AS $$
+  okta_api_{connection_name}(
+    '/api/v1/logs',
+    URLENCODE(OBJECT_CONSTRUCT(
+      'since', since,
+      'limit', limit,
+      'sortOrder', 'ASCENDING'
+    ))
+  )
+$$
+;
+
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_logs(since TIMESTAMP_LTZ) RETURNS VARIANT
+AS $$
+  okta_api_{connection_name}_logs(since, 500)
+$$
+;
+
+
+-- users
+
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_users() RETURNS VARIANT
+AS $$
+  okta_api_{connection_name}('/api/v1/users', '')
+$$
+;
+
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_deprovisioned_users() RETURNS VARIANT
+AS $$
+  okta_api_{connection_name}('/api/v1/users', 'filter=status+eq+"DEPROVISIONED"')
+$$
+;
+
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_user_factors_catalog(userid STRING) RETURNS VARIANT
+AS $$
+  okta_api_{connection_name}('/api/v1/users/' || userid || '/factors/catalog', '')
+$$
+;
+
+
+-- groups
+
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_groups() RETURNS VARIANT
+AS $$
+  okta_api_{connection_name}('/api/v1/groups', '')
+$$
+;
+
+
+-- tasks for populating the tables
+
+CREATE OR REPLACE TASK {ingest_logs_task}
+  WAREHOUSE={snowflake_warehouse}
+  SCHEDULE='USING CRON * * * * * UTC'
+AS
+MERGE INTO {landing_log_table} dst
+USING (
+  SELECT value
+  FROM (
+    SELECT okta_api_{connection_name}_logs(
+      IFNULL(
+        (SELECT MAX(published) FROM {landing_log_table}),
+        CURRENT_TIMESTAMP - INTERVAL '10 minutes'
+      )
+    ) result
+  ), LATERAL FLATTEN ( input => result )
+) src
+ON (
+  src.value = dst.raw
+)
+WHEN NOT MATCHED THEN INSERT VALUES (
+  CURRENT_TIMESTAMP,
+  src.value,
+  src.value:uuid::STRING,
+  src.value:published::TIMESTAMP_LTZ,
+  src.value:eventType::STRING,
+  src.value:version::STRING,
+  src.value:severity::STRING,
+  src.value:legacyEventType::STRING,
+  src.value:displayMessage::STRING,
+  src.value:actor::VARIANT,
+  src.value:client::VARIANT,
+  src.value:request::VARIANT,
+  src.value:outcome::VARIANT,
+  src.value:target::VARIANT,
+  src.value:transaction::VARIANT,
+  src.value:debugContext::VARIANT,
+  src.value:authenticationContext::VARIANT,
+  src.value:securityContext::VARIANT
+)
+;
+ALTER TASK {ingest_logs_task} RESUME;
+
+
+CREATE OR REPLACE TASK {ingest_users_task}
+  WAREHOUSE={snowflake_warehouse}
+  SCHEDULE='USING CRON * * * * * UTC'
+AS
+INSERT INTO {landing_user_table}
+SELECT
+  CURRENT_TIMESTAMP,
+  value raw,
+  raw:id::STRING id,
+  raw:status::STRING status,
+  raw:created::TIMESTAMP_LTZ created,
+  raw:activated::TIMESTAMP_LTZ activated,
+  raw:statusChanged::TIMESTAMP_LTZ status_changed,
+  raw:lastLogin::TIMESTAMP_LTZ last_login,
+  raw:lastUpdated::TIMESTAMP_LTZ last_updated,
+  raw:passwordChanged::TIMESTAMP_LTZ password_changed,
+  raw:profile::VARIANT profile,
+  raw:credentials::VARIANT credentials,
+  raw:_links::VARIANT links
+FROM (
+  SELECT okta_api_{connection_name}_users() result
+), LATERAL FLATTEN ( input => result )
+;
+ALTER TASK {ingest_users_task} RESUME;
+
+
+CREATE OR REPLACE TASK {ingest_group_task}
+  WAREHOUSE={snowflake_warehouse}
+  SCHEDULE='USING CRON * * * * * UTC'
+AS
+INSERT INTO {landing_group_table}
+SELECT
+  CURRENT_TIMESTAMP,
+  value raw,
+  raw:id::STRING id,
+  raw:created::TIMESTAMP_LTZ created,
+  raw:lastUpdated::TIMESTAMP_LTZ lastUpdated,
+  raw:lastMembershipUpdated::TIMESTAMP_LTZ lastMembershipUpdated,
+  raw:objectClass::VARIANT objectClass,
+  raw:type::STRING type,
+  raw:profile::VARIANT profile,
+  raw:_links::VARIANT links,
+  okta_api_{connection_name}(raw:_links:users:href, '') users,
+  okta_api_{connection_name}(raw:_links:apps:href, '') apps
+FROM (
+  SELECT okta_api_{connection_name}_groups() result
+), LATERAL FLATTEN ( input => result )
+;
+ALTER TASK {ingest_group_task} RESUME;
