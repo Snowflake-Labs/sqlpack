@@ -1,0 +1,14 @@
+#!/usr/bin/env python
+
+import fire
+import sqlpack
+
+
+class Main(object):
+  @staticmethod
+  def print_sql(pack_name, data_file=None, **kwargs):
+    sqlpack.print_sql(pack_name, data_file, **kwargs)
+
+
+if __name__ == '__main__':
+    fire.Fire(Main)
