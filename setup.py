@@ -4,7 +4,7 @@ setup(
     name='sqlpack',
     packages=['sqlpack'],
     version='0.1',
-    license='apache-2.0',
+    license='OSI Approved :: Apache Software License',
     description='The sqlpack module lets you distribute modular SQL code.',
     author='Siddhil Rathod',
     author_email='siddhi.rathod@snowflake.com',
@@ -20,7 +20,7 @@ setup(
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Build Tools',
-        'License :: apache-2.0 License',
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python :: 3.9',
     ],
 )
