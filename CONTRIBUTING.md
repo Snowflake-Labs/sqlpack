@@ -28,7 +28,7 @@ Every ETL is put as a separate directory in the [packs](packs) directory and has
 ## Structure of templated SQL files
 The templated sql file should have the extension `.sql.fmt`
 
-The `.sql.fmt` file starts with a yaml header . The paramaters and variable map are extracted from this header and are used throughout the compiled SQL code . 
+The templated SQL file starts with a yaml header . The paramaters and variable map are extracted from this header and are used throughout the compiled SQL code . 
 The header is divided into 2 parts 
 1. `params` - includes the required parameters with the default values for some of them 
     ### SYNTAX
