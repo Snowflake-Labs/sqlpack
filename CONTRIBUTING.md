@@ -12,14 +12,12 @@ into the appropriate tables
 
 Install SnowSQL (Optional)
 --------------------------
---------------------------
 SnowSQL is the next-generation command line client for connecting to Snowflake to execute SQL queries and perform all DDL and DML operations, including loading data into and unloading data out of database tables.
 Click [here](https://docs.snowflake.com/en/user-guide/snowsql-install-config.html) to install SnowSQL
 
 
 
 How To Contribute
------------------
 -----------------
 You can contribute to this project 
 1. By creating new ETLs' of the third-party appplication from where you would like to ingest data into snowflake by writing templated SQL files.
@@ -33,7 +31,6 @@ Every ETL is put as a separate directory in the [packs](packs) directory and has
 2. The yaml file with the ``yaml`` extension
 
 Structure of the Templated SQL file
------------------------------------
 -----------------------------------
 
 The templated sql file should have the extension `.sql.fmt`
@@ -87,7 +84,6 @@ WAREHOUSE={snowflake_warehouse}
 
 Structure of the yaml file
 --------------------------
---------------------------
 This yaml file has to have the same parameters as the parameters mentioned in the * [Templated SQL file header](##Structure-of-the-Templated-SQL-file) . The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
 
 Here is an example
@@ -107,18 +103,18 @@ Once you have the above mentioned files and installations ready , clone the repo
   The [sqlpack](sqlpack) module will be installed on your machine 
 
 3. To compile the templated SQL file you can run the print-sql command by either
-   a. Passing the parameters (mentioned in the * [Templated SQL file header](##Structure-of-the-Templated-SQL-file)) via the terminal in the following manner
+   a. Passing the parameters (mentioned in the [Templated SQL file header](#Structure-of-the-Templated-SQL-file)) via the terminal in the following manner
 ```zsh
 sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
 ```
 or
-  b. Passing the * [yaml](##Structure-of-the-yaml-file) file containing the parameters mapped to their values in the following manner
+  b. Passing the  [yaml file](#Structure-of-the-yaml-file) containing the parameters mapped to their values in the following manner
 ```zsh
 sqlpack print-sql template.sql.fmt parmameters.yaml
 ```
 The above commands will print the results in the terminal .
 
-To pipe the results directly to * [SnowSQL](##Install-SnowSQL-(Optional)) , use
+To pipe the results directly to [SnowSQL](#Install-SnowSQL-(Optional)) , use
 ```
 sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2 | snowsql
 ```
