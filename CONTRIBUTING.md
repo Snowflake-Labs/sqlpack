@@ -25,7 +25,9 @@ Every ETL is put as a separate directory in the [packs](packs) directory and has
 1. The templated SQL file with the ``.sql.fmt`` extension
 2. The yaml file with the ``yaml`` extension
 
-## Structure of Templated SQL files
+Structure of the Templated SQL file
+-------------------------------
+
 The templated sql file should have the extension `.sql.fmt`
 
 The templated SQL file starts with a yaml header . The paramaters and variable map are extracted from this header and are used throughout the compiled SQL code . 
@@ -76,7 +78,7 @@ WAREHOUSE={snowflake_warehouse}
 ```
 
 ## Structure of the yaml file
-This yaml file has to have the same parameters as the parameters mentioned in the  [Structure of templated SQL files](#Structure of templated SQL files) . The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
+This yaml file has to have the same parameters as the parameters mentioned in the [Tempalated SQL file header ](#Structure-of-the-Templated-SQL-file) . The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
 
 Here is an example
 ```
