@@ -50,7 +50,8 @@ The header is divided into 2 parts
     --   landing_log_table: '{table_name}_logs'
 
 Here is an example of what the yaml header looks like
-    `-- ---
+```
+    -- ---
     -- params:
     -- - name: connection_name
     --   default: 'default_connection'
@@ -62,7 +63,8 @@ Here is an example of what the yaml header looks like
     --   landing_log_table: '{table_name}_logs'
     --   landing_user_table: '{table_name}_users'
     --   landing_group_table: '{table_name}_groups'
-    --   domain: '{subdomain}.xyz.com'`
+    --   domain: '{subdomain}.xyz.com'
+```
 
 After the header , the templated SQL code follows .
 
