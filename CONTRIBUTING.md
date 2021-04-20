@@ -25,8 +25,8 @@ Every ETL is put as a separate directory in the [packs](packs) directory and has
 1. The templated SQL file with the ``.sql.fmt`` extension
 2. The yaml file with the ``yaml`` extension
 
-## Structure of the Templated SQL file
-
+Structure of the Templated SQL file
+-----------------------------------
 
 The templated sql file should have the extension `.sql.fmt`
 
