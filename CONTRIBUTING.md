@@ -10,7 +10,7 @@ Before You Contribute
 Before you start contributing , you'll need a snowflake account which you can create [here](https://signup.snowflake.com) . You'll need this account to verify the creation of the components of the sql code like api integrations , external functions , tasks , streams , views , tables etc and also to check if the correct data is ingested from the third party app
 into the appropriate tables
 
-Install SnowSQL(Optional)
+Install SnowSQL[Optional]
 --------------------------
 SnowSQL is the next-generation command line client for connecting to Snowflake to execute SQL queries and perform all DDL and DML operations, including loading data into and unloading data out of database tables.
 Click [here](https://docs.snowflake.com/en/user-guide/snowsql-install-config.html) to install SnowSQL
@@ -118,7 +118,7 @@ sqlpack print-sql template.sql.fmt parmameters.yaml
 ```
 The above commands will print the results in the terminal .
 
-To pipe the results directly to [SnowSQL](#Install-SnowSQL(Optional)) , use
+To pipe the results directly to [SnowSQL](#Install-SnowSQL[Optional]) , use
 ```
 sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2 | snowsql
 ```
