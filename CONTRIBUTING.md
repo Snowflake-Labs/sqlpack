@@ -14,11 +14,12 @@ To install SnowSQL follow https://docs.snowflake.com/en/user-guide/snowsql-insta
 
 
 
-# What To Contribute
+## How To Contribute
 You can contribute to this project 
 1. By creating new ETLs' of the third-party appplication from where you would like to ingest data into snowflake by writing templated SQL files.
 2. By suggesting enhancements to the existing ETLs'  
 
+## File Structure
 Every ETL is put as a separate directory in the ``packs`` directory and has 2 files in it
 1. The templated SQL file with the ``.sql.fmt`` extension
 2. The yaml file with the ``yaml`` extension
