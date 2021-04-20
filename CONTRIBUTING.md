@@ -107,7 +107,7 @@ sqlpack print-sql template.sql.fmt parmameters.yaml
 The above commands will print the results in the terminal .
 
 To pipe the results directly to SnowSQL , use
-```zsh 
+```
 sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2 | snowsql
 ```
 or
