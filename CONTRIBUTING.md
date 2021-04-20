@@ -17,7 +17,8 @@ Click [here](https://docs.snowflake.com/en/user-guide/snowsql-install-config.htm
 ## How To Contribute
 You can contribute to this project 
 1. By creating new ETLs' of the third-party appplication from where you would like to ingest data into snowflake by writing templated SQL files.
-2. By suggesting enhancements to the existing ETLs'  
+2. By suggesting enhancements to the existing ETLs' 
+Create a new branch for all the contributions and ''do not commit anything directly to the main branch''  
 
 ## File Structure
 Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
@@ -63,6 +64,8 @@ Here is an example of what the yaml header looks like
 --   domain: '{subdomain}.xyz.com'
 ```
 
+After the header , the templated SQL code follows .
+
 ### All the parameters and keys mentioned in the params and varmap sections of the the header will be referenced in the templated sql inside curly {} brackets 
 
 Here is an example 
@@ -83,4 +86,30 @@ api_gateway_id: api_gateway_id_value
 subdomain: subdomain_name
 ```
 
-Once you have the above mentioned files and installations ready , you can refer to the [README.md](README.md) on how to compile and produce the SQL code
+Once you have the above mentioned files and installations ready , clone the repository and then on the terminal
+1. Go the the cloned repository
+2. Run the command 
+  ```zsh
+  pipx install -e .
+  ```
+  The [sqlpack](sqlpack) module will be installed on your machine 
+3. To compile the templated SQL file you can run the print-sql command by either
+   a. Passing the parameters (mentioned in the templated SQL file header) via the terminal in the following manner
+```zsh
+sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
+```
+or
+  b. Passing the yaml file containing the parameters mapped to their values in the following manner
+```zsh
+sqlpack print-sql template.sql.fmt parmameters.yaml
+```
+The above commands will print the results in the terminal .
+
+To pipe the results directly to SnowSQL , use
+```zsh 
+sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2 | snowsql
+```
+or
+```
+sqlpack print-sql template.sql.fmt parmameters.yaml | snowsql
+```
