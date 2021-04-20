@@ -38,23 +38,18 @@ The templated SQL file starts with a yaml header . The paramaters and variable m
 The header is divided into 2 parts 
 1. `params` - includes the required parameters with the default values for some of them 
 #### SYNTAX
-    ```zsh
     -- params:
     -- - name: parameter_name
             default: default_value (optional) 
-    -- - name: parameter_name 
-    ```
+    -- - name: parameter_name   
 
 2. `varmap` - maps the variables to their extended values/names
 #### SYNTAX
-    ```zsh
     -- varmap:
     --   table_name: 'table_{connection_name}'
     --   landing_log_table: '{table_name}_logs'
-    ```
 
 Here is an example of what the yaml header looks like
-```zsh
 -- ---
 -- params:
 -- - name: connection_name
@@ -68,30 +63,29 @@ Here is an example of what the yaml header looks like
 --   landing_user_table: '{table_name}_users'
 --   landing_group_table: '{table_name}_groups'
 --   domain: '{subdomain}.xyz.com'
-```
 
 After the header , the templated SQL code follows .
 
 ### All the parameters and keys mentioned in the params and varmap sections of the the header will be referenced in the templated sql inside curly {} brackets 
 
 Here is an example 
-```zsh
+`
 CREATE OR REPLACE TABLE {landing_log_table}
 
 WAREHOUSE={snowflake_warehouse}
-```
+`
 
 Structure of the yaml file
 ==========================
 This yaml file has to have the same parameters as the parameters mentioned in the [templated SQL file header](#Structure-of-the-Templated-SQL-file).The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
 
 Here is an example
-```zsh
+`
 connection_name: connection_name
 snowflake_warehouse: warehouse_name
 api_gateway_id: api_gateway_id_value
 subdomain: subdomain_name
-```
+`
 
 Execution
 ---------
