@@ -12,7 +12,7 @@ into the appropriate tables
 
 Install SnowSQL
 ===============
-(Optional)
+(This is an optional step)
 SnowSQL is the next-generation command line client for connecting to Snowflake to execute SQL queries and perform all DDL and DML operations, including loading data into and unloading data out of database tables.
 Click [here](https://docs.snowflake.com/en/user-guide/snowsql-install-config.html) to install SnowSQL
 
