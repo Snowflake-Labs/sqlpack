@@ -83,4 +83,4 @@ api_gateway_id: api_gateway_id_value
 subdomain: subdomain_name
 ```
 
-Once you have the above mentioned files and installations ready , you can refer to the [sqlpack](README.md) on how to compile and produce the SQL code
+Once you have the above mentioned files and installations ready , you can refer to the [README.md](README.md) on how to compile and produce the SQL code
