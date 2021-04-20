@@ -5,12 +5,12 @@ Sqlpacks is an open source project which has
  - A repository of standard SQL templates for ETL operations with Snowflake 
 
 # Before You Contribute
-Before you start contributing , you'll need a snowflake account which you can create here https://signup.snowflake.com . You'll need this account to verify the creation of the components of the sql code like api integrations , external functions , tasks , streams , views , tables etc and also to check if the correct data is ingested from the third party app
+Before you start contributing , you'll need a snowflake account which you can create [here](https://signup.snowflake.com) . You'll need this account to verify the creation of the components of the sql code like api integrations , external functions , tasks , streams , views , tables etc and also to check if the correct data is ingested from the third party app
 into the appropriate tables
 
 ## Install SnowSQL (Recommended)
 SnowSQL is the next-generation command line client for connecting to Snowflake to execute SQL queries and perform all DDL and DML operations, including loading data into and unloading data out of database tables.
-To install SnowSQL follow https://docs.snowflake.com/en/user-guide/snowsql-install-config.html 
+Click [here](https://docs.snowflake.com/en/user-guide/snowsql-install-config.html) to install SnowSQL
 
 
 
@@ -20,7 +20,7 @@ You can contribute to this project
 2. By suggesting enhancements to the existing ETLs'  
 
 ## File Structure
-Every ETL is put as a separate directory in the ``packs`` directory and has 2 files in it
+Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
 1. The templated SQL file with the ``.sql.fmt`` extension
 2. The yaml file with the ``yaml`` extension
 
