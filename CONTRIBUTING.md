@@ -78,7 +78,7 @@ WAREHOUSE={snowflake_warehouse}
 ```
 
 ## Structure of the yaml file
-This yaml file has to have the same parameters as the parameters mentioned in the * [Templated SQL file header](##Structure-of-the-Templated-SQL-file) . The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
+This yaml file has to have the same parameters as the parameters mentioned in the * [Templated SQL file header](#Structure-of-the-Templated-SQL-file) . The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
 
 Here is an example
 ```
