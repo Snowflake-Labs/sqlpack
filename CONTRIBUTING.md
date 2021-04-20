@@ -93,6 +93,7 @@ Once you have the above mentioned files and installations ready , clone the repo
   pipx install -e .
   ```
   The [sqlpack](sqlpack) module will be installed on your machine 
+
 3. To compile the templated SQL file you can run the print-sql command by either
    a. Passing the parameters (mentioned in the templated SQL file header) via the terminal in the following manner
 ```zsh
