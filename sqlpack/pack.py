@@ -70,7 +70,7 @@ def read_template_header(template):
 
 def print_sql(pack_name, data_file_name: Optional[str] = None, **kwargs):
     cwd = path.dirname(__file__)
-    arr = os.listdir(cwd)
+    arr = os.walk(cwd)
     print(arr)
     pack_file_options = [pack_name] + [p.format(cwd,pack_name) for p in PACK_TEMPLATE_PATH]
     pack_file = next((f for f in pack_file_options if path.isfile(f)), None)
