@@ -6,8 +6,8 @@ import sqlpack
 
 class Main(object):
   @staticmethod
-  def print_sql(pack_name, data_file=None, **kwargs):
-    sqlpack.print_sql(pack_name, data_file, **kwargs)
+  def print_sql(pack_name, data_file_name=None, **kwargs):
+    sqlpack.print_sql(pack_name, data_file_name, **kwargs)
 
 
 if __name__ == '__main__':
