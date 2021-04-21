@@ -11,8 +11,8 @@ import fire
 
 
 PACK_PATH = [
-    'packs/{0}/main.sql.fmt',
-    'packs/{0}/{0}.sql.fmt',
+    '{0}/packs/{1}/main.sql.fmt',
+    '{0}/packs/{1}/{1}.sql.fmt',
 ]
 
 
@@ -63,7 +63,9 @@ def read_template_header(template):
 
 
 def print_sql(pack_name, data_file: Optional[str] = None, **kwargs):
-    pack_file_options = [pack_name] + [p.format(pack_name) for p in PACK_PATH]
+    cwd = os.getcwd()
+    prefix = path.dirname(cwd)
+    pack_file_options = [pack_name] + [p.format(prefix,pack_name) for p in PACK_PATH]
     pack_file = next((f for f in pack_file_options if path.isfile(f)), None)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
