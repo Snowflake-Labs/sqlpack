@@ -69,8 +69,7 @@ def read_template_header(template):
 
 
 def print_sql(pack_name, data_file_name: Optional[str] = None, **kwargs):
-    cwd = path.dirname(path.dirname(__file__))
-    print(cwd)
+    cwd = path.dirname(__file__)
     pack_file_options = [pack_name] + [p.format(cwd,pack_name) for p in PACK_TEMPLATE_PATH]
     pack_file = next((f for f in pack_file_options if path.isfile(f)), None)
     if not pack_file:
@@ -87,8 +86,7 @@ def print_sql(pack_name, data_file_name: Optional[str] = None, **kwargs):
         args = defaults | varmap | file_datum | kwargs
         missing_params = validate_params(params, args)
         if not missing_params:
-            #print(expand_macros(pack_dir, format(template_text, args)))
-            print("done")
+            print(expand_macros(pack_dir, format(template_text, args)))
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
