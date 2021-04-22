@@ -45,11 +45,11 @@ The templated SQL file starts with a yaml header. The paramaters and variable ma
 
 The header is divided into 2 parts:
 
-1. `params` - includes the required parameters with the default values for some of them 
+1. `params` - include the params required to make make the template work and the default values for those that are not required for the user to specify
 #### SYNTAX
     -- params:
     -- - name: parameter_name
-         default: default_value (optional) 
+         default: default_value
     -- - name: parameter_name   
 
 2. `varmap` - maps the variables to their extended values/names
