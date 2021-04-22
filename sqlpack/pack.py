@@ -73,7 +73,7 @@ def get_file_path(file_name, file_path, parent_dir):
     return result
 
 
-def print_sql(pack_name, data_file_name: Optional[str] = None, **kwargs):
+def print_sql(pack_name, **kwargs):
     cwd = path.dirname(__file__)
     pack_file = get_file_path(pack_name, PACK_TEMPLATE_PATH, cwd)
     if not pack_file:
