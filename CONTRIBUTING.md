@@ -134,20 +134,20 @@ The [sqlpack](https://pypi.org/project/sqlpack) module will be installed on your
 
 Then, to compile the templated SQL file you can run the print-sql command by either:
 
-(1) passing the params via the terminal like so:
+(1) passing the pack name (folder in which the templated sql file and data file are stored), the data file is by default included like so:
 
 ```bash
-sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
+sqlpack print-sql pack_name
 ```
 
-or (2), passing the [yaml file](#Structure-of-the-yaml-file) containing the parameters like so:
+or (2) passing the application name followed by the params via the terminal if you want to overwrite the parameter values ingested from the data file like so:
 
 ```bash
-sqlpack print-sql template.sql.fmt parmameters.yaml
+sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 ```
 
 The above commands will print the results in the terminal. To pipe the results directly to [SnowSQL](#Install-SnowSQL), use your favorite shell's pipe, like so:
 
 ```bash
-sqlpack print-sql template.sql.fmt parmameters.yaml | snowsql
+sqlpack print-sql pack_name | snowsql
 ```
