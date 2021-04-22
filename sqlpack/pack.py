@@ -14,7 +14,7 @@ PACK_TEMPLATE_PATH = [
     '{0}/packs/{1}/{1}.sql.fmt',
 ]
 
-PACK_YAML_PATH = [
+PACK_DATA_PATH = [
     '{0}/data.yaml',
     '{0}/example_data.yaml',
     '{0}/{1}.yaml',
@@ -80,7 +80,7 @@ def print_sql(pack_name, **kwargs):
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
         sys.exit(-1)
     pack_dir = path.dirname(pack_file)
-    data_file = get_file_path(pack_name, PACK_YAML_PATH, pack_dir)
+    data_file = get_file_path(pack_name, PACK_DATA_PATH, pack_dir)
     template_text = open(pack_file, 'r').read()
 
     varmap, params = read_template_header(template_text)
