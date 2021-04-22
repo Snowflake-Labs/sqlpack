@@ -13,7 +13,7 @@ setup(
     download_url = 'https://github.com/Snowflake-Labs/sqlpacks/archive/refs/tags/0.1.0.tar.gz',
     scripts=['bin/sqlpack'],
     package_data={
-        "": ["*.py","packs/*"]
+        "": ["*.py","packs/*/*.sql.fmt","packs/*/*.yaml"]
     },
     include_package_data=True,
     keywords='SNOWFLAKE PACKS SNOWSQL SNOWSQL-PACKS',
