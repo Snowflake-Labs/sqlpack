@@ -28,7 +28,11 @@ You can contribute to this project -
 
 Create a new branch for all your contributions and send us a PR with a description of how you tested your change.
 
-File Structure
+Functionality of the compiler engine
+---
+The sqlpack engine uses two stages: the template-substitution stage, which replaces variables provided by the user, and the macro expansion stage, which adds useful shorthands to the SQL and not currently present in SnowSQL.
+
+Files Used
 ---
 
 Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
@@ -111,17 +115,17 @@ cd sqlpacks
 pipx install -e .
 ```
 
-The [sqlpack](https://pypi.org/project/sqlpack) module will be installed on your machine 
+The [sqlpack](https://pypi.org/project/sqlpack) module will be installed on your machine in an "editable" mode.
 
-Then, to compile the templated SQL file you can run the print-sql command by either
+Then, to compile the templated SQL file you can run the print-sql command by either:
 
-Passing the params via the terminal like so:
+(1) passing the params via the terminal like so:
 
 ```zsh
 sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
 ```
 
-or passing the [yaml file](#Structure-of-the-yaml-file) containing the parameters like so:
+or (2), passing the [yaml file](#Structure-of-the-yaml-file) containing the parameters like so:
 
 ```zsh
 sqlpack print-sql template.sql.fmt parmameters.yaml
