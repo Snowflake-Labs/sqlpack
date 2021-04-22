@@ -81,11 +81,13 @@ Here is an example of what the yaml header looks like
 
 After this header, the templated SQL code follows.
 
-### All the parameters and keys mentioned in the params and varmap sections of the the header will be referenced in the templated sql inside curly {} brackets 
+All the parameters and keys mentioned in the params and varmap sections of the the header can be referenced in the templated sql inside curly brackets, e.g.
 
 Here is an example 
 
 ~~~
+SET url='https://{domain}/api/v2/users'
+
 CREATE OR REPLACE TABLE {landing_log_table} ...
 
 WAREHOUSE={snowflake_warehouse} ...
@@ -93,7 +95,7 @@ WAREHOUSE={snowflake_warehouse} ...
 
 Structure of the data file
 ---
-This yaml file has to have the same parameters as the parameters mentioned in the [templated SQL file header](#Structure-of-the-Templated-SQL-file).The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value
+This yaml file has to have the same parameters as the parameters mentioned in the [templated SQL file header](#Structure-of-the-Templated-SQL-file). The structure of this yaml file is like a dictionary with the parameters as the key and the actual value of the parameters as the value, or a list of such dictionaries to apply one after the other.
 
 Here is an example:
 
