@@ -1,5 +1,6 @@
 Introduction
-------------
+---
+
 SQLPacks is an open source project which has —
 
  - A CLI utility used for compiling templated SQL files with macros into SnowSQL  
@@ -7,26 +8,31 @@ SQLPacks is an open source project which has —
  - A repository of standard SQL templates for ETL operations with Snowflake 
 
 Before You Contribute
----------------------
+---
+
 Before you start contributing, you'll need a snowflake account which you can create [here](https://signup.snowflake.com). You'll need this account to verify the creation of the components of the SQL code like API Integrations, External Functions, Tasks, Streams, Views, Tables, etc, and also to check if the correct data is ingested from the third party app into the appropriate tables.
 
 Install SnowSQL (optional)
---------------------------
+---
+
 SnowSQL is the command line client for connecting to Snowflake to execute SQL, including loading data into and unloading data out of database tables. Click [here](https://docs.snowflake.com/en/user-guide/snowsql-install-config.html) to learn how to install SnowSQL.
 
 How To Contribute
 ---
+
 You can contribute to this project -
 
-- by creating new SQL modules (e.g. ETL's of the third-party appplication) in the `packs` directory
-- by improving the runtime engine in the `sqlpack` directory
+- by creating new SQL modules (e.g. ETLs of the third-party appplication) in the `packs` directory
+- by improving the runtime engine in the `sqlpack` directory, e.g. extending the `expand_macros` functionality
 - by filing issues or enhancement requests
 
 Create a new branch for all your contributions and send us a PR with a description of how you tested your change.
 
 File Structure
 ---
+
 Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
+
 1. The templated SQL file with the ``.sql.fmt`` extension
 2. The yaml file with the ``yaml`` extension
 
@@ -95,7 +101,7 @@ subdomain: subdomain_name
 ~~~
 
 Developing
----------
+---
 
 Once you are ready to contribute, run —
 
