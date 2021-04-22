@@ -15,7 +15,7 @@ setup(
     packages=find_packages("sqlpack"),  
     package_dir={"": "sqlpack"},
     package_data={
-        "sqlpack": ["packs/okta/*.sql.fmt","packs/okta/*.yaml"]
+        "sqlpack": ["*.py","packs/okta/*.sql.fmt","packs/okta/*.yaml"]
     },
     include_package_data=True,
     keywords='SNOWFLAKE PACKS SNOWSQL SNOWSQL-PACKS',
