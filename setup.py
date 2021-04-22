@@ -12,8 +12,8 @@ setup(
     url='https://github.com/Snowflake-Labs/sqlpack',
     download_url = 'https://github.com/Snowflake-Labs/sqlpacks/archive/refs/tags/0.1.0.tar.gz',
     scripts=['bin/sqlpack'],
-    packages=find_packages("SQLPACKS"),  
-    package_dir={"": "SQLPACKS"},
+    packages=find_packages("sqlpack"),  
+    package_dir={"": "sqlpack"},
     package_data={
         "sqlpack": ["packs/okta/*.sql.fmt","packs/okta/*.yaml"]
     },
