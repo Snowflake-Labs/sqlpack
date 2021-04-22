@@ -71,7 +71,6 @@ def read_template_header(template):
 def print_sql(pack_name, data_file_name: Optional[str] = None, **kwargs):
     cwd = path.dirname(__file__)
     pack_file_options = [pack_name] + [p.format(cwd,pack_name) for p in PACK_TEMPLATE_PATH]
-    print(pack_file_options)
     pack_file = next((f for f in pack_file_options if path.isfile(f)), None)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
