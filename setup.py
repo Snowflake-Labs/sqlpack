@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='sqlpack',
-    packages=['sqlpack'],
+    #packages=['sqlpack'],
     version='0.1',
     license='OSI Approved :: Apache Software License',
     description='The sqlpack module lets you distribute modular SQL code.',
