@@ -8,9 +8,9 @@ The sqlpack module provides —
 3. A repository of standard SQL templates for ETL operations with Snowflake.
 
 
-### If you want to contribute to the project , please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file .
+### If you want to contribute to the project, please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
-### For using the ETLs' present in the project , follow the steps mentioned below
+### For using the ETLs present in the project, follow the steps mentioned below
 ## Install
 ```zsh
 pipx install sqlpack
