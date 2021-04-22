@@ -1,5 +1,4 @@
 #!/usr/bin/env python3.9
-import os
 import re
 from itertools import takewhile
 from os import path
@@ -10,7 +9,7 @@ import yaml
 import fire
 
 
-PACK_TEMPLATE_PATH= [
+PACK_TEMPLATE_PATH = [
     '{0}/packs/{1}/main.sql.fmt',
     '{0}/packs/{1}/{1}.sql.fmt',
 ]
@@ -68,16 +67,20 @@ def read_template_header(template):
     return header['varmap'], header['params']
 
 
+def get_file_path(file_name, file_path, parent_dir):
+    file_options = [file_name] + [p.format(parent_dir, file_name) for p in file_path]
+    result = next((f for f in file_options if path.isfile(f)), None)
+    return result
+
+
 def print_sql(pack_name, data_file_name: Optional[str] = None, **kwargs):
     cwd = path.dirname(__file__)
-    pack_file_options = [pack_name] + [p.format(cwd,pack_name) for p in PACK_TEMPLATE_PATH]
-    pack_file = next((f for f in pack_file_options if path.isfile(f)), None)
+    pack_file = get_file_path(pack_name, PACK_TEMPLATE_PATH, cwd)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
         sys.exit(-1)
     pack_dir = path.dirname(pack_file)
-    data_file_options = [p.format(pack_dir,data_file_name) for p in PACK_YAML_PATH]
-    data_file = next((f for f in data_file_options if path.isfile(f)), None)
+    data_file = get_file_path(pack_name, PACK_YAML_PATH, pack_dir)
     template_text = open(pack_file, 'r').read()
 
     varmap, params = read_template_header(template_text)
