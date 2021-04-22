@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='sqlpack',
-    #packages=['sqlpack'],
+    packages=['sqlpack'],
     version='0.1',
     license='OSI Approved :: Apache Software License',
     description='The sqlpack module lets you distribute modular SQL code.',
@@ -12,10 +12,10 @@ setup(
     url='https://github.com/Snowflake-Labs/sqlpack',
     download_url = 'https://github.com/Snowflake-Labs/sqlpacks/archive/refs/tags/0.1.0.tar.gz',
     scripts=['bin/sqlpack'],
-    packages=find_packages("sqlpack"),  
-    package_dir={"": "sqlpack"},
+    #packages=find_packages("sqlpack"),  
+    #package_dir={"": "sqlpack"},
     package_data={
-        "sqlpack": ["*.py","packs/okta/*.sql.fmt","packs/okta/*.yaml"]
+        "": ["*.py","packs/okta/*.sql.fmt","packs/okta/*.yaml"]
     },
     include_package_data=True,
     keywords='SNOWFLAKE PACKS SNOWSQL SNOWSQL-PACKS',
