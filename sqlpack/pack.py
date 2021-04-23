@@ -9,14 +9,9 @@ import yaml
 import fire
 
 
-SQLPACK_TEMPLATE_PATH = [
+SQLPACK_PATH = [
     '../packs/{0}/main.sql.fmt',
     '../packs/{0}/{0}.sql.fmt',
-]
-
-SQLPACK_DATA_PATH = [
-    '../packs/{0}/example_data.yaml',
-    '../packs/{0}/{0}.yaml',
 ]
 
 
@@ -74,14 +69,14 @@ def find_file(file_name, possible_paths, parent_dir='.'):
 
 def print_sample_data(pack_name):
     cwd = path.dirname(__file__)
-    data_file = find_file(pack_name, SQLPACK_DATA_PATH, cwd)
+    data_file = '../packs/{0}/example_data.yaml'.format(file_name)
     data_sample = open(data_file, 'r').read()
     print(data_sample)
 
 
 def print_sql(pack_name, data_file=None, **kwargs):
     cwd = path.dirname(__file__)
-    pack_file = find_file(pack_name, SQLPACK_TEMPLATE_PATH, cwd)
+    pack_file = find_file(pack_name, SQLPACK_PATH, cwd)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
         sys.exit(-1)
@@ -100,8 +95,3 @@ def print_sql(pack_name, data_file=None, **kwargs):
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
-
-
-if __name__ == '__main__':
-    fire.Fire(print_sample_data)
-    fire.Fire(print_sql)
