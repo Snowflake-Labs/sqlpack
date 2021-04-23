@@ -33,8 +33,8 @@ Compiler engine
 
 The sqlpack engine uses two stages:
 
-1. *The template-substitution stage*, which replaces variables provided by the user,
-1. *The macro expansion stage*, which adds useful shorthands to the SQL and not currently present in SnowSQL.
+1. *The template-substitution stage* replaces variables provided by the user,
+1. *The macro expansion stage* adds useful shorthands to the SQL and not currently present in SnowSQL.
 
 Files Used
 ---
