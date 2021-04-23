@@ -68,10 +68,11 @@ def find_file(file_name, possible_paths, parent_dir='.'):
 
 
 def print_sample_data(pack_name):
-    cwd = path.dirname(__file__)
-    data_file = '../packs/{0}/example_data.yaml'.format(file_name)
-    data_sample = open(data_file, 'r').read()
-    print(data_sample)
+    data_file = path.join(
+        path.dirname(__file__), '..', 'packs', pack_name, 'example_data.yaml'
+    )
+    with open(data_file, 'r') as f:
+        print(f.read())
 
 
 def print_sql(pack_name, data_file=None, **kwargs):
