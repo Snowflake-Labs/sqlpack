@@ -42,7 +42,7 @@ Files Used
 Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
 
 1. The templated SQL file with the ``.sql.fmt`` extension
-1. The data file with the ``yaml`` extension
+1. The yaml file with the ``yaml`` extension
 1. An optional .js file for packs that use inline JS code
 
 Structure of the Templated SQL file
@@ -140,7 +140,7 @@ Then, to compile the templated SQL file you can run the print-sql command by eit
 sqlpack print-sql pack_name
 ```
 
-or (2) passing the pack name followed by the params via the terminal if you want to overwrite the parameter values ingested from the data file like so:
+or (2) passing the application name followed by the params via the terminal if you want to overwrite the parameter values ingested from the data file like so:
 
 ```bash
 sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
