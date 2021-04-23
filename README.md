@@ -1,3 +1,4 @@
+<!-- README.md -->
 # sqlpack
 
 The sqlpack module provides —
@@ -7,6 +8,9 @@ The sqlpack module provides —
 3. A repository of standard SQL templates for ETL operations with Snowflake.
 
 
+### If you want to contribute to the project, please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file.
+
+### For using the ETLs present in the project, follow the steps mentioned below
 ## Install
 ```zsh
 pipx install sqlpack
@@ -17,7 +21,7 @@ pipx install sqlpack
 To compile a built-in template at the CLI, use the `print-sql` sub-command —
 
 ```zsh
-sqlpack print-sql <template_name | template-file.sql.fmt> [param-file.yml] [--params ...]
+sqlpack print-sql <pack_name> [--params ...]
 ```
 
 ### Providing Parameter Values
@@ -51,11 +55,11 @@ nested_replace = schema_{simple_replace}_end
 
 #### Execute via Terminal
 ```zsh
-sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
+sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 ```
 or
 ```zsh
-sqlpack print-sql template.sql.fmt parmameters.yaml
+sqlpack print-sql pack_name
 ```
 
 #### Output
@@ -72,5 +76,5 @@ To accomplish the same thing as above in your Python script, you can —
 ```python
 from sqlpack import print_sql
 
-print_sql('template.sql.fmt', parameter_1='val1', parameter_2='val2')
+print_sql('pack_name', parameter_1='val1', parameter_2='val2')
 ```
