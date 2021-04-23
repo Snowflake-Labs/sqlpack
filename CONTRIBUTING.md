@@ -28,9 +28,9 @@ You can contribute to this project -
 
 Create a new branch for all your contributions and send us a PR with a description of how you tested your change.
 
-Functionality of the compiler engine
-
+Compiler engine
 ---
+
 The sqlpack engine uses two stages:
 
 1. *The template-substitution stage*, which replaces variables provided by the user,
