@@ -3,9 +3,9 @@ Introduction
 
 SQLPacks is an open source project which has —
 
-- A CLI utility used for compiling templated SQL files with macros into SnowSQL  
-- A Python module that can be used to ship SQL components with your code
-- A repository of standard SQL templates for ETL operations with Snowflake
+- a CLI utility used for compiling templated SQL files with macros into SnowSQL  
+- a Python module that can be used to ship SQL components with your code
+- a repository of standard SQL templates for ETL operations with Snowflake
 
 Before You Contribute
 ---
