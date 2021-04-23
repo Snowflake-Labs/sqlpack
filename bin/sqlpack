@@ -5,10 +5,13 @@ import sqlpack
 
 
 class Main(object):
-  @staticmethod
-  def print_sql(pack_name, data_file=None, **kwargs):
-    sqlpack.print_sql(pack_name, data_file, **kwargs)
+    @staticmethod
+    def print_sql(pack_name, data_file=None, **kwargs):
+        sqlpack.print_sql(pack_name, data_file, **kwargs)
 
+    @staticmethod
+    def print_sample_data(pack_name):
+        sqlpack.print_sample_data(pack_name)
 
 if __name__ == '__main__':
     fire.Fire(Main)

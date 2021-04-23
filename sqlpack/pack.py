@@ -9,9 +9,14 @@ import yaml
 import fire
 
 
-SQLPACK_PATH = [
+SQLPACK_TEMPLATE_PATH = [
     '../packs/{0}/main.sql.fmt',
     '../packs/{0}/{0}.sql.fmt',
+]
+
+SQLPACK_DATA_PATH = [
+    '../packs/{0}/example_data.yaml',
+    '../packs/{0}/{0}.yaml',
 ]
 
 
@@ -67,9 +72,16 @@ def find_file(file_name, possible_paths, parent_dir='.'):
     return next((fp for fp in possible_file_paths if path.isfile(fp)), None)
 
 
+def print_sample_data(pack_name):
+    cwd = path.dirname(__file__)
+    data_file = find_file(pack_name, SQLPACK_DATA_PATH, cwd)
+    data_sample = open(data_file, 'r').read()
+    print(data_sample)
+
+
 def print_sql(pack_name, data_file=None, **kwargs):
     cwd = path.dirname(__file__)
-    pack_file = find_file(pack_name, SQLPACK_PATH, cwd)
+    pack_file = find_file(pack_name, SQLPACK_TEMPLATE_PATH, cwd)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
         sys.exit(-1)
@@ -78,16 +90,20 @@ def print_sql(pack_name, data_file=None, **kwargs):
     file_data = load_data_file(data_file) if data_file else [{}]
 
     varmap, params = read_template_header(template_text)
+    pack_dir = path.dirname(pack_file)
     defaults = {p['name']: p['default'] for p in params if 'default' in p}
     for file_datum in file_data:
         args = defaults | varmap | file_datum | kwargs
         missing_params = validate_params(params, args)
         if not missing_params:
             print(expand_macros(pack_dir, format(template_text, args)))
+            pass
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
+                pass
 
 
 if __name__ == '__main__':
+    fire.Fire(print_sample_data)
     fire.Fire(print_sql)
