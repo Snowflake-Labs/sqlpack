@@ -9,15 +9,9 @@ import yaml
 import fire
 
 
-PACK_TEMPLATE_PATH = [
-    '{0}/packs/{1}/main.sql.fmt',
-    '{0}/packs/{1}/{1}.sql.fmt',
-]
-
-PACK_DATA_PATH = [
-    '{0}/data.yaml',
-    '{0}/example_data.yaml',
-    '{0}/{1}.yaml',
+SQLPACK_PATH = [
+    '../packs/{0}/main.sql.fmt',
+    '../packs/{0}/{0}.sql.fmt',
 ]
 
 
@@ -67,25 +61,25 @@ def read_template_header(template):
     return header['varmap'], header['params']
 
 
-def get_file_path(file_name, file_path, parent_dir):
-    file_options = [file_name] + [p.format(parent_dir, file_name) for p in file_path]
-    result = next((f for f in file_options if path.isfile(f)), None)
-    return result
+def find_file(file_name, possible_paths, parent_dir='.'):
+    possible_files = [file_name] + [p.format(file_name) for p in possible_paths]
+    possible_file_paths = [path.join(parent_dir, p) for p in possible_files]
+    return next((fp for fp in possible_file_paths if path.isfile(fp)), None)
 
 
-def print_sql(pack_name, **kwargs):
+def print_sql(pack_name, data_file=None, **kwargs):
     cwd = path.dirname(__file__)
-    pack_file = get_file_path(pack_name, PACK_TEMPLATE_PATH, cwd)
+    pack_file = find_file(pack_name, SQLPACK_PATH, cwd)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
         sys.exit(-1)
-    pack_dir = path.dirname(pack_file)
-    data_file = get_file_path(pack_name, PACK_DATA_PATH, pack_dir)
+
     template_text = open(pack_file, 'r').read()
+    file_data = load_data_file(data_file) if data_file else [{}]
 
     varmap, params = read_template_header(template_text)
     defaults = {p['name']: p['default'] for p in params if 'default' in p}
-    for file_datum in load_data_file(data_file):
+    for file_datum in file_data:
         args = defaults | varmap | file_datum | kwargs
         missing_params = validate_params(params, args)
         if not missing_params:
