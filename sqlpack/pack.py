@@ -97,11 +97,9 @@ def print_sql(pack_name, data_file=None, **kwargs):
         missing_params = validate_params(params, args)
         if not missing_params:
             print(expand_macros(pack_dir, format(template_text, args)))
-            pass
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
-                pass
 
 
 if __name__ == '__main__':
