@@ -1,0 +1,6 @@
+base_table: base_table_name
+WAREHOUSE: snowalert
+days: '10'
+time_column: event_time
+groups: grp1
+limit: '100'
