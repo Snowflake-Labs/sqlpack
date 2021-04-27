@@ -5,16 +5,15 @@
 -- - name: days
 --   default: 90
 -- - name: time_column
--- - name: groups
 -- - name: limit
 --   default: 100
 -- varmap: 
---   {}
-
+--   target_table: '{base_table}_counts'
+--   task_name: '{base_table}_count'
 
 
 --COUNT_HOURLY_TABLE_SQL
-CREATE OR REPLACE TABLE {base_table}_counts (
+CREATE OR REPLACE TABLE {target_table} (
   slice_start timestamp_ltz,
   slice_end timestamp_ltz,
   groups variant,
@@ -22,12 +21,94 @@ CREATE OR REPLACE TABLE {base_table}_counts (
 )
 ;
 
+USE SCHEMA data;
+CREATE FUNCTION IF NOT EXISTS time_slices (n NUMBER, s TIMESTAMP_NTZ, e TIMESTAMP_NTZ)
+RETURNS TABLE (
+  slice_start TIMESTAMP_NTZ,
+  slice_end TIMESTAMP_NTZ
+) AS
+SELECT
+  DATEADD(
+    sec,
+    DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
+      ORDER BY
+        SEQ4()
+    ) / n,
+    s
+  ) AS slice_start,
+  DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
+FROM
+  TABLE(GENERATOR(ROWCOUNT = > n));
+  
+  
+CREATE FUNCTION IF NOT EXISTS time_slices (n NUMBER, s TIMESTAMP_LTZ, e TIMESTAMP_LTZ) RETURNS TABLE (
+    slice_start TIMESTAMP_LTZ,
+    slice_end TIMESTAMP_LTZ
+  ) AS
+SELECT
+  DATEADD(
+    sec,
+    DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
+      ORDER BY
+        SEQ4()
+    ) / n,
+    s
+  ) AS slice_start,
+  DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
+FROM
+  TABLE(GENERATOR(ROWCOUNT = > n));
+
+CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
+    num_slices NUMBER,
+    seconds_in_slice NUMBER,
+    t TIMESTAMP_NTZ
+  ) RETURNS TABLE (
+    slice_start TIMESTAMP_NTZ,
+    slice_end TIMESTAMP_NTZ
+  ) AS
+SELECT
+  slice_start,
+  slice_end
+FROM
+  TABLE(
+    time_slices(
+      num_slices,
+      DATEADD(sec, - seconds_in_slice * num_slices, t),
+      t
+    )
+  );
+
+  
+CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
+    num_slices NUMBER,
+    seconds_in_slice NUMBER,
+    t TIMESTAMP_LTZ
+  ) 
+  RETURNS TABLE (
+    slice_start TIMESTAMP_LTZ,
+    slice_end TIMESTAMP_LTZ
+  ) AS
+SELECT
+  slice_start,
+  slice_end
+FROM
+  TABLE(
+      time_slices
+      (
+        num_slices,
+        DATEADD(sec, - seconds_in_slice * num_slices, t
+      ),
+      t
+    )
+  );
+
+
 -- COUNT_HOURLY_TASK_SQL 
-CREATE OR REPLACE TASK {base_table}_count
+CREATE OR REPLACE TASK {task_name}
   SCHEDULE='USING CRON 0 * * * * UTC'
   WAREHOUSE={WAREHOUSE}
 AS
-MERGE INTO {base_table}_counts stored USING (
+MERGE INTO {target_table} stored USING (
   -- calculate sums
   SELECT
     COUNT(*) n,
@@ -54,7 +135,10 @@ MERGE INTO {base_table}_counts stored USING (
       -- calculate sums in those slices
       SELECT
         {time_column} event_time,
-        {groups} AS groups
+        OBJECT_CONSTRUCT(
+          'city', city, 
+          'users', users
+        ) AS groups
       FROM
         {base_table}
     ) c 
@@ -84,7 +168,7 @@ VALUES (
     n
 )
 
-ALTER TASK {base_table}_count RESUME;
+ALTER TASK {task_name} RESUME;
 
 
 -- BASIC_BASELINE_VIEW 
@@ -106,20 +190,22 @@ SELECT * FROM (
          , groups
          , slice_start
          , slice_end
-    FROM {base_table}_counts
+    FROM {target_table}
     RIGHT JOIN (
       -- zero filled matrix of (groups X slices)
       SELECT groups, slice_start, slice_end
       FROM (
         SELECT DISTINCT groups
-        FROM {base_table}_counts
+        FROM {target_table}
       ) g
       CROSS JOIN (
         SELECT slice_start, slice_end
         FROM TABLE
         (data.TIME_SLICES_BEFORE_T
             (
-                {days} * 24, 60 * 60, DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
+                {days} * 24, 
+                60 * 60, 
+                DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
             )
         )
       ) t
@@ -132,6 +218,6 @@ SELECT * FROM (
 )
 WHERE hour = (
   SELECT MAX(slice_start)
-  FROM {base_table}_counts
+  FROM {target_table}
 )
 ORDER BY n DESC
