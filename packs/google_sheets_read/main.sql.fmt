@@ -1,0 +1,42 @@
+-- ---
+-- params:
+-- - name: sheet_reader_service_account
+-- - name: snowflake_api_integration
+--   default: 'sec_snowalert_api_integration'
+-- - name: aws_api_gateway_id
+-- - name: aws_api_gateway_region
+-- - name: aws_api_gateway_stage_name
+--   default: 'prod'
+-- varmap: {}
+
+CREATE OR REPLACE SECURE EXTERNAL FUNCTION data.google_sheets_read(sheet_id STRING, tab_name STRING) 
+RETURNS VARIANT 
+RETURNS NULL ON NULL INPUT 
+VOLATILE 
+COMMENT = 'https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get' 
+API_INTEGRATION = {snowflake_api_integration}
+HEADERS =(
+  'service-account-info' = '{sheet_reader_service_account}' 
+  'service-name' = 'sheets' 
+  'service-version' = 'v4' 
+  'resource-name' = 'spreadsheets.values' 
+  'method' = 'get' 
+  'params' = '{"spreadsheetId": "{0}", "range": "{1}"}'
+) 
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/google';
+​ 
+CREATE OR REPLACE SECURE EXTERNAL FUNCTION data.google_sheets_read(sheet_id STRING, tab_name STRING, range STRING) 
+RETURNS VARIANT 
+RETURNS NULL ON NULL INPUT 
+VOLATILE 
+COMMENT = 'https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get' 
+API_INTEGRATION = {snowflake_api_integration}
+HEADERS =(
+  'service-account-info' = '{sheet_reader_service_account}' 
+  'service-name' = 'sheets' 
+  'service-version' = 'v4' 
+  'resource-name' = 'spreadsheets.values' 
+  'method' = 'get' 
+  'params' = '{"spreadsheetId": "{0}", "range": "{1}!{2}"}'
+) 
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/google';
