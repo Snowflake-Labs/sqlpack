@@ -18,10 +18,21 @@ pipx install sqlpack
 
 ## Using at the CLI
 
+Use the `print_sample_data` command to see the required parameters for the templated SQL for a built in pack like so:
+```zsh
+sqlpack print_sample_data pack_name
+
+#To store these parameters into a yaml file , run :
+sqlpack print_sample_data pack_name > parameters.yaml
+
+#Update the parameter values in the yaml file with the the editor of your choice. If you use VSCode , run :
+code parameters.yaml
+```
+
 To compile a built-in template at the CLI, use the `print-sql` sub-command —
 
 ```zsh
-sqlpack print-sql <template_name | template-file.sql.fmt> [param-file.yml] [--params ...]
+sqlpack print-sql <pack_name> [parameters.yaml] [--params ...]
 ```
 
 ### Providing Parameter Values
@@ -55,11 +66,11 @@ nested_replace = schema_{simple_replace}_end
 
 #### Execute via Terminal
 ```zsh
-sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
+sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 ```
 or
 ```zsh
-sqlpack print-sql template.sql.fmt parmameters.yaml
+sqlpack print-sql pack_name parameters.yaml
 ```
 
 #### Output
@@ -76,5 +87,9 @@ To accomplish the same thing as above in your Python script, you can —
 ```python
 from sqlpack import print_sql
 
-print_sql('template.sql.fmt', parameter_1='val1', parameter_2='val2')
+print_sql('pack_name', parameter_1='val1', parameter_2='val2')
+```
+or 
+```python
+print_sql('pack_name','parameters.yaml')
 ```

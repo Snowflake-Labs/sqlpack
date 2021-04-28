@@ -132,22 +132,33 @@ pipx install -e .
 
 The [sqlpack](https://pypi.org/project/sqlpack) module will be installed on your machine in an "editable" mode.
 
-Then, to compile the templated SQL file you can run the print-sql command by either:
+Use the `print_sample_data` command to see the required parameters for the templated SQL for a pack like so:
+```bash
+sqlpack print_sample_data pack_name
+
+#To store these parameters into a yaml file , run :
+sqlpack print_sample_data pack_name > parmameters.yaml
+
+#Update the parameter values in the yaml file with the the editor of your choice. If you use VSCode , run :
+code parmameters.yaml
+```
+
+Then, to compile the templated SQL file you can run the `print-sql` command by either:
 
 (1) passing the params via the terminal like so:
 
 ```bash
-sqlpack print-sql template.sql.fmt --parameter_1 val_1 --parameter_2 val_2
+sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 ```
 
 or (2), passing the [yaml file](#Structure-of-the-yaml-file) containing the parameters like so:
 
 ```bash
-sqlpack print-sql template.sql.fmt parmameters.yaml
+sqlpack print-sql pack_name parmameters.yaml
 ```
 
 The above commands will print the results in the terminal. To pipe the results directly to [SnowSQL](#Install-SnowSQL), use your favorite shell's pipe, like so:
 
 ```bash
-sqlpack print-sql template.sql.fmt parmameters.yaml | snowsql
+sqlpack print-sql pack_name parmameters.yaml | snowsql
 ```
