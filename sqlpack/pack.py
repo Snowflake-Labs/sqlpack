@@ -20,9 +20,9 @@ def list_packs():
     print(cwd)
     parent = path.dirname(cwd)
     print(parent)
-    print(listdir(parent))
-    if path.exists('../packs/'):
-        for packs in listdir('../packs/'): 
+    #print(listdir(parent))
+    if path.exists(f'{parent}/packs'):
+        for packs in listdir(f'{parent}/packs/'): 
             print(packs)
     else:
         print("Packs directory not found")
