@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.9
 import re
 from itertools import takewhile
-from os import path
+from os import path, listdir
 from typing import Dict, List, Optional
 import sys
 
@@ -13,6 +13,11 @@ SQLPACK_PATH = [
     '../packs/{0}/main.sql.fmt',
     '../packs/{0}/{0}.sql.fmt',
 ]
+
+
+def list_packs():
+    for packs in listdir('packs/' or '../packs/'):
+        print(packs)
 
 
 def format(find, replace):
