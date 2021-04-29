@@ -95,5 +95,5 @@ print_sql('pack_name', parameter_1='val1', parameter_2='val2')
 ```
 or 
 ```python
-print_sql('pack_name','parameters.yaml')
+print_sql('pack_name', 'parameters.yaml')
 ```
