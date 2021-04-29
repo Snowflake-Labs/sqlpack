@@ -140,10 +140,10 @@ Use the `print_sample_data` command to see the required parameters for the templ
 ```bash
 sqlpack print_sample_data pack_name
 
-#To store these parameters into a yaml file , run :
+# To store these parameters in a yaml file, run :
 sqlpack print_sample_data pack_name > parmameters.yaml
 
-#Update the parameter values in the yaml file with the the editor of your choice. If you use VSCode , run :
+# Update the parameter values in the yaml file with the the editor of your choice. If you use VSCode, run :
 code parmameters.yaml
 ```
 
