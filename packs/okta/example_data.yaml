@@ -1,7 +1,7 @@
-connection_name: dev527891
+connection_name: connection
 snowflake_warehouse: example_wh
 snowflake_api_integration: example_api_integration
-subdomain: dev-527891
+subdomain: sudomain
 okta_api_token: 'qwertyzhnfuajim4z3q83zyod'
-aws_api_gateway_id: e0bn3h42
+aws_api_gateway_id: gateway_id
 aws_api_gateway_region: us-west-2

@@ -32,7 +32,9 @@ code parameters.yaml
 To compile a built-in template at the CLI, use the `print-sql` sub-command —
 
 ```zsh
+
 sqlpack print-sql <pack_name> [parameters.yaml] [--params ...]
+
 ```
 
 ### Providing Parameter Values
@@ -71,6 +73,7 @@ sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 or
 ```zsh
 sqlpack print-sql pack_name parameters.yaml
+
 ```
 
 #### Output

@@ -1,4 +1,5 @@
 from distutils.core import setup
+from setuptools import find_packages
 
 setup(
     name='sqlpack',
@@ -9,8 +10,10 @@ setup(
     author='Siddhil Rathod',
     author_email='siddhi.rathod@snowflake.com',
     url='https://github.com/Snowflake-Labs/sqlpack',
-    download_url = 'https://github.com/Snowflake-Labs/sqlpacks/archive/refs/tags/0.1.0.tar.gz',
+    download_url='https://github.com/Snowflake-Labs/sqlpacks/archive/refs/tags/0.1.0.tar.gz',
     scripts=['bin/sqlpack'],
+    package_data={"sqlpack": ["*.py", "../packs/*/*.sql.fmt", "../packs/*/*.yaml"]},
+    include_package_data=True,
     keywords='SNOWFLAKE PACKS SNOWSQL SNOWSQL-PACKS',
     install_requires=[
         'fire',

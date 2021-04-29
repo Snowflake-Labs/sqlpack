@@ -1,5 +1,4 @@
 #!/usr/bin/env python3.9
-
 import re
 from itertools import takewhile
 from os import path
@@ -10,9 +9,9 @@ import yaml
 import fire
 
 
-PACK_PATH = [
-    'packs/{0}/main.sql.fmt',
-    'packs/{0}/{0}.sql.fmt',
+SQLPACK_PATH = [
+    '../packs/{0}/main.sql.fmt',
+    '../packs/{0}/{0}.sql.fmt',
 ]
 
 
@@ -62,18 +61,34 @@ def read_template_header(template):
     return header['varmap'], header['params']
 
 
-def print_sql(pack_name, data_file: Optional[str] = None, **kwargs):
-    pack_file_options = [pack_name] + [p.format(pack_name) for p in PACK_PATH]
-    pack_file = next((f for f in pack_file_options if path.isfile(f)), None)
+def find_file(file_name, possible_paths, parent_dir='.'):
+    possible_files = [file_name] + [p.format(file_name) for p in possible_paths]
+    possible_file_paths = [path.join(parent_dir, p) for p in possible_files]
+    return next((fp for fp in possible_file_paths if path.isfile(fp)), None)
+
+
+def print_sample_data(pack_name):
+    data_file = path.join(
+        path.dirname(__file__), '..', 'packs', pack_name, 'example_data.yaml'
+    )
+    with open(data_file, 'r') as f:
+        print(f.read())
+
+
+def print_sql(pack_name, data_file=None, **kwargs):
+    cwd = path.dirname(__file__)
+    pack_file = find_file(pack_name, SQLPACK_PATH, cwd)
     if not pack_file:
         print("NO PACK FOUND WITH NAME", pack_name, file=sys.stderr)
         sys.exit(-1)
-    pack_dir = path.dirname(pack_file)
+
     template_text = open(pack_file, 'r').read()
+    file_data = load_data_file(data_file) if data_file else [{}]
 
     varmap, params = read_template_header(template_text)
+    pack_dir = path.dirname(pack_file)
     defaults = {p['name']: p['default'] for p in params if 'default' in p}
-    for file_datum in load_data_file(data_file):
+    for file_datum in file_data:
         args = defaults | varmap | file_datum | kwargs
         missing_params = validate_params(params, args)
         if not missing_params:
@@ -81,7 +96,3 @@ def print_sql(pack_name, data_file: Optional[str] = None, **kwargs):
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
-
-
-if __name__ == '__main__':
-    fire.Fire(print_sql)

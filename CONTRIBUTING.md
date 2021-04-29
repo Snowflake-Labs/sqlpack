@@ -7,6 +7,7 @@ SQLPacks is an open source project which has —
 - A Python module that can be used to ship SQL components with your code
 - A repository of standard SQL templates for ETL operations with Snowflake
 
+
 Before You Contribute
 ---
 
@@ -28,6 +29,7 @@ You can contribute to this project -
 
 Create a new branch for all your contributions and send us a PR with a description of how you tested your change.
 
+
 Functionality of the compiler engine
 
 ---
@@ -36,14 +38,15 @@ The sqlpack engine uses two stages:
 1. *The template-substitution stage*, which replaces variables provided by the user,
 1. *The macro expansion stage*, which adds useful shorthands to the SQL and not currently present in SnowSQL.
 
+
 Files Used
 ---
 
 Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
 
 1. The templated SQL file with the ``.sql.fmt`` extension
-1. The yaml file with the ``yaml`` extension
-1. An optional .js file for packs that use inline JS code
+2. The data file with the ``yaml`` extension
+3. An optional .js file for packs that use inline JS code
 
 Structure of the Templated SQL file
 ---
@@ -132,6 +135,7 @@ pipx install -e .
 
 The [sqlpack](https://pypi.org/project/sqlpack) module will be installed on your machine in an "editable" mode.
 
+
 Use the `print_sample_data` command to see the required parameters for the templated SQL for a pack like so:
 ```bash
 sqlpack print_sample_data pack_name
@@ -155,10 +159,12 @@ or (2), passing the [yaml file](#Structure-of-the-yaml-file) containing the para
 
 ```bash
 sqlpack print-sql pack_name parmameters.yaml
-```
+
 
 The above commands will print the results in the terminal. To pipe the results directly to [SnowSQL](#Install-SnowSQL), use your favorite shell's pipe, like so:
 
 ```bash
 sqlpack print-sql pack_name parmameters.yaml | snowsql
+
+sqlpack print-sql pack_name | snowsql
 ```
