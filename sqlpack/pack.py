@@ -16,8 +16,11 @@ SQLPACK_PATH = [
 
 
 def list_packs():
-    for packs in listdir('packs/' or '../packs/'):
-        print(packs)
+    if path.exists('../packs/'):
+        for packs in listdir('../packs/'): 
+            print(packs)
+    else:
+        print("Packs directory not found"))
 
 
 def format(find, replace):
