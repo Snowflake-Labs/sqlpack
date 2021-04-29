@@ -20,7 +20,7 @@ def list_packs():
         for packs in listdir('../packs/'): 
             print(packs)
     else:
-        print("Packs directory not found"))
+        print("Packs directory not found")
 
 
 def format(find, replace):
