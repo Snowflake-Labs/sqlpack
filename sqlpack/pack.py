@@ -17,9 +17,9 @@ SQLPACK_PATH = [
 
 def list_packs():
     cwd = path.dirname(__file__)
-    parent = path.dirname(cwd)
-    if path.exists(f'{parent}/packs'):
-        for pack in listdir(f'{parent}/packs/'):
+    #parent = path.dirname(cwd)
+    if path.exists(f'{cwd}/../packs'):
+        for pack in listdir(f'{cwd}/../packs/'):
             print(pack)
     else:
         print("Packs directory not found", file=sys.stderr)
