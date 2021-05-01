@@ -16,9 +16,9 @@ SQLPACK_PATH = [
 
 
 def list_packs():
-    get_dir = path.join(path.dirname(__file__ ), '..', 'packs')
-    if path.exists(f'{get_dir}'):
-        for pack in listdir(f'{get_dir}'):
+    packs_dir = path.join(path.dirname(__file__ ), '..', 'packs')
+    if path.exists(packs_dir):
+        for pack in listdir(packs_dir):
             print(pack)
     else:
         print("Packs directory not found", file=sys.stderr)
@@ -106,4 +106,3 @@ def print_sql(pack_name, data_file=None, **kwargs):
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
 
-list_packs()
