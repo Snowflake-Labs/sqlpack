@@ -3,9 +3,10 @@ Introduction
 
 SQLPacks is an open source project which has —
 
-- a CLI utility used for compiling templated SQL files with macros into SnowSQL  
-- a Python module that can be used to ship SQL components with your code
-- a repository of standard SQL templates for ETL operations with Snowflake
+- A CLI utility used for compiling templated SQL files with macros into SnowSQL  
+- A Python module that can be used to ship SQL components with your code
+- A repository of standard SQL templates for ETL operations with Snowflake
+
 
 Before You Contribute
 ---
@@ -28,13 +29,15 @@ You can contribute to this project -
 
 Create a new branch for all your contributions and send us a PR with a description of how you tested your change.
 
-Compiler engine
----
 
+Functionality of the compiler engine
+
+---
 The sqlpack engine uses two stages:
 
-1. *The template-substitution stage* replaces variables provided by the user,
-1. *The macro expansion stage* adds useful shorthands to the SQL and not currently present in SnowSQL.
+1. *The template-substitution stage*, which replaces variables provided by the user,
+1. *The macro expansion stage*, which adds useful shorthands to the SQL and not currently present in SnowSQL.
+
 
 Files Used
 ---
@@ -42,8 +45,8 @@ Files Used
 Every ETL is put as a separate directory in the [packs](packs) directory and has 2 files in it
 
 1. The templated SQL file with the ``.sql.fmt`` extension
-1. The data file with the ``yaml`` extension
-1. An optional .js file for packs that use inline JS code
+2. The data file with the ``yaml`` extension
+3. An optional .js file for packs that use inline JS code
 
 Structure of the Templated SQL file
 ---
@@ -132,22 +135,36 @@ pipx install -e .
 
 The [sqlpack](https://pypi.org/project/sqlpack) module will be installed on your machine in an "editable" mode.
 
-Then, to compile the templated SQL file you can run the print-sql command by either:
 
-(1) passing the pack name (folder in which the templated sql file and data file are stored), the data file is by default included like so:
-
+Use the `print_sample_data` command to see the required parameters for the templated SQL for a pack like so:
 ```bash
-sqlpack print-sql pack_name
+sqlpack print_sample_data pack_name
+
+# To store these parameters in a yaml file, run :
+sqlpack print_sample_data pack_name > parmameters.yaml
+
+# Update the parameter values in the yaml file with the the editor of your choice. If you use VSCode, run :
+code parmameters.yaml
 ```
 
-or (2) passing the pack name followed by the params via the terminal if you want to overwrite the parameter values ingested from the data file like so:
+Then, to compile the templated SQL file you can run the `print-sql` command by either:
+
+(1) passing the params via the terminal like so:
 
 ```bash
 sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 ```
 
+or (2), passing the [yaml file](#Structure-of-the-yaml-file) containing the parameters like so:
+
+```bash
+sqlpack print-sql pack_name parmameters.yaml
+
+
 The above commands will print the results in the terminal. To pipe the results directly to [SnowSQL](#Install-SnowSQL), use your favorite shell's pipe, like so:
 
 ```bash
+sqlpack print-sql pack_name parmameters.yaml | snowsql
+
 sqlpack print-sql pack_name | snowsql
 ```
