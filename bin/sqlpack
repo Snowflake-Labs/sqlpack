@@ -5,8 +5,8 @@ import sqlpack
 
 
 class SQLPackCommands:
-
-    def list_packs(self):
+    @staticmethod
+    def list_packs():
         sqlpack.list_packs()
 
     @staticmethod
