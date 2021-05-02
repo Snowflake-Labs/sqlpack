@@ -11,6 +11,7 @@ The sqlpack module provides —
 ### If you want to contribute to the project, please refer to the [CONTRIBUTING.md](CONTRIBUTING.md) file.
 
 ### For using the ETLs present in the project, follow the steps mentioned below
+
 ## Install
 ```zsh
 pipx install sqlpack
@@ -18,10 +19,23 @@ pipx install sqlpack
 
 ## Using at the CLI
 
+Use the `print-sample-data` command to see the required parameters for the templated SQL for a built in pack like so:
+```zsh
+sqlpack print-sample-data pack_name
+
+# To store these parameters into a yaml file , run :
+sqlpack print-sample-data pack_name > parameters.yaml
+
+# Update the parameter values in the yaml file with the the editor of your choice. If you use VSCode , run :
+code parameters.yaml
+```
+
 To compile a built-in template at the CLI, use the `print-sql` sub-command —
 
 ```zsh
-sqlpack print-sql <pack_name> [--params ...]
+
+sqlpack print-sql <pack_name> [parameters.yaml] [--params ...]
+
 ```
 
 ### Providing Parameter Values
@@ -59,7 +73,8 @@ sqlpack print-sql pack_name --parameter_1 val_1 --parameter_2 val_2
 ```
 or
 ```zsh
-sqlpack print-sql pack_name
+sqlpack print-sql pack_name parameters.yaml
+
 ```
 
 #### Output
@@ -77,4 +92,8 @@ To accomplish the same thing as above in your Python script, you can —
 from sqlpack import print_sql
 
 print_sql('pack_name', parameter_1='val1', parameter_2='val2')
+```
+or 
+```python
+print_sql('pack_name', 'parameters.yaml')
 ```
