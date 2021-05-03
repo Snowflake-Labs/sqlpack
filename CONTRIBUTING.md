@@ -29,6 +29,13 @@ You can contribute to this project -
 
 Create a new branch for all your contributions and send us a PR with a description of how you tested your change.
 
+To list the available SQL modules (ETLs) use the `list_packs` command like so :
+```python
+pipx install sqlpack
+
+sqlpack list_packs
+```
+
 
 Functionality of the compiler engine
 
@@ -159,12 +166,12 @@ or (2), passing the [yaml file](#Structure-of-the-yaml-file) containing the para
 
 ```bash
 sqlpack print-sql pack_name parmameters.yaml
-
+```
 
 The above commands will print the results in the terminal. To pipe the results directly to [SnowSQL](#Install-SnowSQL), use your favorite shell's pipe, like so:
 
 ```bash
 sqlpack print-sql pack_name parmameters.yaml | snowsql
 
-sqlpack print-sql pack_name | snowsql
+sqlpack print-sql pack_name --parameter_1 val_1 | snowsql
 ```
