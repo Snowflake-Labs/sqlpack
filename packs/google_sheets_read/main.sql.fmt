@@ -1,20 +1,19 @@
 -- ---
 -- params:
 -- - name: account_info
+--   secret: true
 -- - name: snowflake_api_integration
 -- - name: aws_api_gateway_id
 -- - name: aws_api_gateway_region
 -- - name: aws_api_gateway_stage_name
--- varmap: 
---   external_function_name: 'google_sheets_read'
 
-CREATE OR REPLACE SECURE EXTERNAL FUNCTION {external_function_name}(sheet_id STRING, tab_name STRING) 
+CREATE OR REPLACE SECURE EXTERNAL FUNCTION google_sheets_read(sheet_id STRING, tab_name STRING) 
 RETURNS VARIANT 
 RETURNS NULL ON NULL INPUT 
 VOLATILE 
 COMMENT = 'https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get' 
 API_INTEGRATION = {snowflake_api_integration}
-HEADERS =(
+HEADERS = (
   'service-account-info' = '{account_info}' 
   'service-name' = 'sheets' 
   'service-version' = 'v4' 
@@ -22,15 +21,16 @@ HEADERS =(
   'method' = 'get' 
   'params' = '{"spreadsheetId": "{0}", "range": "{1}"}'
 ) 
-AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/google';
-​ 
-CREATE OR REPLACE SECURE EXTERNAL FUNCTION {external_function_name}(sheet_id STRING, tab_name STRING, range STRING) 
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/google'
+;
+
+CREATE OR REPLACE SECURE EXTERNAL FUNCTION google_sheets_read(sheet_id STRING, tab_name STRING, range STRING) 
 RETURNS VARIANT 
 RETURNS NULL ON NULL INPUT 
 VOLATILE 
 COMMENT = 'https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get' 
 API_INTEGRATION = {snowflake_api_integration}
-HEADERS =(
+HEADERS = (
   'service-account-info' = '{account_info}' 
   'service-name' = 'sheets' 
   'service-version' = 'v4' 
@@ -38,4 +38,5 @@ HEADERS =(
   'method' = 'get' 
   'params' = '{"spreadsheetId": "{0}", "range": "{1}!{2}"}'
 ) 
-AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/google';
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/google'
+;
