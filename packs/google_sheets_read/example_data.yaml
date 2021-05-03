@@ -1,5 +1,5 @@
 account_info: '{"type": "service_account", "project_id": "GCP_ACCOUNT_NAME", ... } '
 snowflake_api_integration: snowflake_api_integration
 aws_api_gateway_id: aws_api_gateway_id
-aws_api_gateway_region: aws_api_gateway_region
-aws_api_gateway_stage_name: aws_api_gateway_stage_name
+aws_api_gateway_region: us-west-1
+aws_api_gateway_stage_name: prod
