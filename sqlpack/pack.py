@@ -1,7 +1,7 @@
 #!/usr/bin/env python3.9
 import re
 from itertools import takewhile
-from os import path
+from os import path, listdir
 from typing import Dict, List, Optional
 import sys
 
@@ -13,6 +13,15 @@ SQLPACK_PATH = [
     '../packs/{0}/main.sql.fmt',
     '../packs/{0}/{0}.sql.fmt',
 ]
+
+
+def list_packs():
+    packs_dir = path.join(path.dirname(__file__ ), '..', 'packs')
+    if path.exists(packs_dir):
+        for pack in listdir(packs_dir):
+            print(pack)
+    else:
+        print("Packs directory not found", file=sys.stderr)
 
 
 def format(find, replace):
@@ -96,3 +105,4 @@ def print_sql(pack_name, data_file=None, **kwargs):
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
+

@@ -6,6 +6,10 @@ import sqlpack
 
 class SQLPackCommands:
     @staticmethod
+    def list_packs():
+        sqlpack.list_packs()
+
+    @staticmethod
     def print_sql(pack_name, data_file=None, **kwargs):
         sqlpack.print_sql(pack_name, data_file, **kwargs)
 
