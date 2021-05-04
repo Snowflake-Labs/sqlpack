@@ -1,113 +1,121 @@
 -- ---
 -- params:
 -- - name: base_table
--- - name: WAREHOUSE
+-- - name: warehouse
 -- - name: days
 --   default: 90
 -- - name: time_column
 -- - name: limit
 --   default: 100
--- varmap: 
+-- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
 
 
---COUNT_HOURLY_TABLE_SQL
 CREATE OR REPLACE TABLE {target_table} (
   slice_start timestamp_ltz,
   slice_end timestamp_ltz,
   groups variant,
   n number
-)
-;
+);
 
-USE SCHEMA data;
-CREATE FUNCTION IF NOT EXISTS time_slices (n NUMBER, s TIMESTAMP_NTZ, e TIMESTAMP_NTZ)
-RETURNS TABLE (
+
+CREATE FUNCTION IF NOT EXISTS time_slices (n NUMBER, s TIMESTAMP_NTZ, e TIMESTAMP_NTZ) RETURNS TABLE (
   slice_start TIMESTAMP_NTZ,
   slice_end TIMESTAMP_NTZ
-) AS
+) 
+AS 
+$$
 SELECT
   DATEADD(
-    sec,
-    DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
-      ORDER BY
-        SEQ4()
+      sec,
+      DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
+        ORDER BY SEQ4()
     ) / n,
     s
   ) AS slice_start,
   DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
 FROM
-  TABLE(GENERATOR(ROWCOUNT = > n));
-  
-  
+  TABLE(GENERATOR(ROWCOUNT => n)) 
+$$
+;
+
+
 CREATE FUNCTION IF NOT EXISTS time_slices (n NUMBER, s TIMESTAMP_LTZ, e TIMESTAMP_LTZ) RETURNS TABLE (
     slice_start TIMESTAMP_LTZ,
     slice_end TIMESTAMP_LTZ
-  ) AS
+  ) 
+AS
+$$
 SELECT
   DATEADD(
     sec,
     DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
-      ORDER BY
-        SEQ4()
+      ORDER BY SEQ4()
     ) / n,
     s
   ) AS slice_start,
   DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
-FROM
-  TABLE(GENERATOR(ROWCOUNT = > n));
+FROM TABLE(GENERATOR(ROWCOUNT => n))
+$$
+;
+
 
 CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
     num_slices NUMBER,
     seconds_in_slice NUMBER,
     t TIMESTAMP_NTZ
-  ) RETURNS TABLE (
-    slice_start TIMESTAMP_NTZ,
-    slice_end TIMESTAMP_NTZ
-  ) AS
+  ) 
+RETURNS TABLE (
+  slice_start TIMESTAMP_NTZ,
+  slice_end TIMESTAMP_NTZ
+) 
+AS
+$$
 SELECT
   slice_start,
   slice_end
-FROM
-  TABLE(
+FROM TABLE(
     time_slices(
-      num_slices,
-      DATEADD(sec, - seconds_in_slice * num_slices, t),
+        num_slices,
+        DATEADD(sec, - seconds_in_slice * num_slices, t),
       t
     )
-  );
+  )
+$$
+;
 
-  
+
 CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
     num_slices NUMBER,
     seconds_in_slice NUMBER,
     t TIMESTAMP_LTZ
   ) 
-  RETURNS TABLE (
+RETURNS TABLE (
     slice_start TIMESTAMP_LTZ,
     slice_end TIMESTAMP_LTZ
-  ) AS
+  ) 
+AS
+$$
 SELECT
   slice_start,
   slice_end
 FROM
   TABLE(
-      time_slices
-      (
-        num_slices,
-        DATEADD(sec, - seconds_in_slice * num_slices, t
-      ),
+    time_slices (
+      num_slices,
+      DATEADD(sec, - seconds_in_slice * num_slices, t),
       t
     )
-  );
+  )
+$$
+;
 
 
--- COUNT_HOURLY_TASK_SQL 
-CREATE OR REPLACE TASK {task_name}
-  SCHEDULE='USING CRON 0 * * * * UTC'
-  WAREHOUSE={WAREHOUSE}
-AS
+CREATE OR REPLACE TASK {task_name} 
+SCHEDULE = 'USING CRON 0 * * * * UTC' 
+WAREHOUSE = {warehouse} 
+AS 
 MERGE INTO {target_table} stored USING (
   -- calculate sums
   SELECT
@@ -122,13 +130,12 @@ MERGE INTO {target_table} stored USING (
         slice_start,
         slice_end
       FROM
-        TABLE
-        (data.TIME_SLICES_BEFORE_T
-            (
-                {days} * 24,
-                60 * 60,
-                DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
-            )
+        TABLE (
+            TIME_SLICES_BEFORE_T (
+              {days} * 24,
+              60 * 60,
+              DATE_TRUNC(HOUR, CURRENT_TIMESTAMP(()))
+          )
         )
     ) t
     JOIN (
@@ -136,13 +143,12 @@ MERGE INTO {target_table} stored USING (
       SELECT
         {time_column} event_time,
         OBJECT_CONSTRUCT(
-          'city', city, 
-          'users', users
+          'city',city,
+          'users',user,
         ) AS groups
       FROM
         {base_table}
-    ) c 
-    ON c.event_time BETWEEN t.slice_start
+    ) c ON c.event_time BETWEEN t.slice_start
     AND t.slice_end
   GROUP BY
     slice_start,
@@ -155,69 +161,96 @@ ON (
   AND stored.slice_end = calcd.slice_end
 )
 WHEN NOT MATCHED THEN
-INSERT (
-    slice_start, 
-    slice_end, 
-    groups, 
-    n
+INSERT
+(
+  slice_start,
+  slice_end,
+  groups,
+  n
 )
-VALUES (
-    slice_start, 
-    slice_end, 
-    groups, 
-    n
-)
+VALUES
+(
+  slice_start,
+  slice_end,
+  groups,
+  n
+);
 
-ALTER TASK {task_name} RESUME;
+
+ ALTER TASK {task_name} RESUME;
 
 
--- BASIC_BASELINE_VIEW 
+-- BASIC_BASELINE_VIEW
 CREATE OR REPLACE VIEW {base_table}_pct_baseline AS
-SELECT * FROM (
-  SELECT slice_start hour
-       , groups
-       , n
-       , APPROX_PERCENTILE(n, .01) OVER (PARTITION BY groups) pct01
-       , APPROX_PERCENTILE(n, .05) OVER (PARTITION BY groups) pct05
-       , APPROX_PERCENTILE(n, .10) OVER (PARTITION BY groups) pct10
-       , APPROX_PERCENTILE(n, .50) OVER (PARTITION BY groups) pct50
-       , APPROX_PERCENTILE(n, .90) OVER (PARTITION BY groups) pct90
-       , APPROX_PERCENTILE(n, .95) OVER (PARTITION BY groups) pct95
-       , APPROX_PERCENTILE(n, .99) OVER (PARTITION BY groups) pct99
-  FROM (
-    -- zero-filled count table
-    SELECT ZEROIFNULL(n) n
-         , groups
-         , slice_start
-         , slice_end
-    FROM {target_table}
-    RIGHT JOIN (
-      -- zero filled matrix of (groups X slices)
-      SELECT groups, slice_start, slice_end
-      FROM (
-        SELECT DISTINCT groups
-        FROM {target_table}
-      ) g
-      CROSS JOIN (
-        SELECT slice_start, slice_end
-        FROM TABLE
-        (data.TIME_SLICES_BEFORE_T
+SELECT * FROM
+(
+  SELECT
+    slice_start hour,
+    groups,
+    n,
+    APPROX_PERCENTILE(n,.01) OVER (PARTITION BY groups) pct01,
+    APPROX_PERCENTILE(n,.05) OVER (PARTITION BY groups) pct05,
+    APPROX_PERCENTILE(n,.10) OVER (PARTITION BY groups) pct10,
+    APPROX_PERCENTILE(n,.50) OVER (PARTITION BY groups) pct50,
+    APPROX_PERCENTILE(n,.90) OVER (PARTITION BY groups) pct90,
+    APPROX_PERCENTILE(n,.95) OVER (PARTITION BY groups) pct95,
+    APPROX_PERCENTILE(n,.99) OVER (PARTITION BY groups) pct99
+  FROM
+    (
+      -- zero-filled count table
+      SELECT
+        ZEROIFNULL(n) n,
+        groups,
+        slice_start,
+        slice_end
+      FROM
+        {target_table}
+        RIGHT JOIN (
+          -- zero filled matrix of (groups X slices)
+          SELECT
+            groups,
+            slice_start,
+            slice_end
+          FROM
             (
-                {days} * 24, 
-                60 * 60, 
-                DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
-            )
-        )
-      ) t
+              SELECT
+                DISTINCT groups
+              FROM
+                {target_table}
+            ) g
+            CROSS JOIN (
+              SELECT
+                slice_start,
+                slice_end
+              FROM
+                TABLE (
+                  TIME_SLICES_BEFORE_T (
+                    {days} * 24,
+                    60 * 60,
+                    DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
+                  )
+                )
+            ) t
+        ) USING (groups, slice_start, slice_end)
+      ORDER BY
+        n DESC {
+      limit {limit}
+      } -- optional limit
     )
-    USING (groups, slice_start, slice_end)
-    ORDER BY n DESC
-    {limit} -- optional limit
-  )
-  WHERE slice_start > DATEADD(HOUR, -24 * {days}, DATE_TRUNC(HOUR, CURRENT_TIMESTAMP))
+  WHERE
+    slice_start > DATEADD(
+      HOUR,
+      -24 * {days},
+      DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
+    )
 )
-WHERE hour = (
-  SELECT MAX(slice_start)
-  FROM {target_table}
+WHERE
+  hour = (
+    SELECT
+      MAX(slice_start)
+    FROM
+      {target_table}
 )
-ORDER BY n DESC
+ORDER BY
+n DESC
+;

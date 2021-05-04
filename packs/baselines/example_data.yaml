@@ -1,5 +1,5 @@
 base_table: base_table_name
-WAREHOUSE: snowalert
+warehouse: snowflake_warehouse
 days: '10'
-time_column: event_time
+time_column: time_column
 limit: '100'
