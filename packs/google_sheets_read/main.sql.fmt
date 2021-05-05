@@ -1,6 +1,6 @@
 -- ---
 -- params:
--- - name: account_info
+-- - name: service_account_info
 --   secret: true
 -- - name: snowflake_api_integration
 -- - name: aws_api_gateway_id
@@ -14,7 +14,7 @@ VOLATILE
 COMMENT = 'https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get' 
 API_INTEGRATION = {snowflake_api_integration}
 HEADERS = (
-  'service-account-info' = '{account_info}' 
+  'service-account-info' = '{service_account_info}' 
   'service-name' = 'sheets' 
   'service-version' = 'v4' 
   'resource-name' = 'spreadsheets.values' 
@@ -31,7 +31,7 @@ VOLATILE
 COMMENT = 'https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets.values/get' 
 API_INTEGRATION = {snowflake_api_integration}
 HEADERS = (
-  'service-account-info' = '{account_info}' 
+  'service-account-info' = '{service_account_info}' 
   'service-name' = 'sheets' 
   'service-version' = 'v4' 
   'resource-name' = 'spreadsheets.values' 
