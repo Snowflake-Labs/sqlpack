@@ -2,7 +2,7 @@ name: Test Python package
 on:
   push:
     branches:
-      -main
+      -add_pytest_workflow
 jobs:
   build:
     runs-on: ${{ matrix.os }}
