@@ -1,4 +1,4 @@
-account_info: '{"type": "service_account", "project_id": "GCP_ACCOUNT_NAME", ... } '
+service_account_info: '{"type": "service_account", "project_id": "GCP_ACCOUNT_NAME", ... } '
 snowflake_api_integration: snowflake_api_integration
 aws_api_gateway_id: aws_api_gateway_id
 aws_api_gateway_region: us-west-1
