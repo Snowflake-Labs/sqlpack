@@ -1,5 +1,5 @@
-base_table: base_table_name
-warehouse: snowflake_warehouse
+base_table: okta_logs_table
+warehouse: warehouse_1
 days: '10'
-time_column: time_column
+time_column: event_time
 limit: '100'
