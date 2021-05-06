@@ -73,7 +73,7 @@ WHERE rule IS NOT NULL
 GROUP BY rule, ts
 `
 
-const QUERIES_LIKE_SQL = QUERIES_LIKE ? `  AND dst.alert:QUERY_NAME ILIKE ${QUERIES_LIKE}` : ''
+const QUERIES_LIKE_SQL = QUERIES_LIKE ? `  AND dst.alert:QUERY_NAME ILIKE '${QUERIES_LIKE}'` : ''
 
 const MERGE_SUPRESSIONS_SQL = `
 MERGE INTO results.alerts dst
