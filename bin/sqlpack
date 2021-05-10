@@ -7,7 +7,11 @@ import sqlpack
 class SQLPackCommands:
     @staticmethod
     def list_packs():
-        sqlpack.list_packs()
+        print(sqlpack.list_packs())
+
+    @staticmethod
+    def search_pack(pack_name):
+        print(sqlpack.search_pack(pack_name))
 
     @staticmethod
     def print_sql(pack_name, data_file=None, **kwargs):

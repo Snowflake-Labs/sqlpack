@@ -18,11 +18,20 @@ SQLPACK_PATH = [
 def list_packs():
     packs_dir = path.join(path.dirname(__file__ ), '..', 'packs')
     if path.exists(packs_dir):
-        for pack in listdir(packs_dir):
-            print(pack)
+        packs = listdir(packs_dir)
+        packs.sort()
+        return packs
     else:
         print("Packs directory not found", file=sys.stderr)
 
+
+def search_pack(pack_name):
+    packs = list_packs()
+    found_in = []
+    for pack in packs:
+        if pack_name in pack:
+            found_in.append(pack)
+    return found_in if found_in else f"{pack_name} pack not available. Please refer to https://github.com/Snowflake-Labs/sqlpacks/blob/main/CONTRIBUTING.md if you wish to contribute the {pack_name} pack"
 
 def format(find, replace):
     found = find
