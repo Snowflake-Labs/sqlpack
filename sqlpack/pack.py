@@ -32,8 +32,7 @@ def search_pack(pack_name):
         if pack_name in pack:
             found_in.append(pack)
     if found_in:
-        for i in found_in:
-            print(i)  
+        print(*found_in , sep ="\n") 
     else :
         print(f"{pack_name} pack not available. Please refer to https://github.com/Snowflake-Labs/sqlpacks/blob/main/CONTRIBUTING.md if you wish to contribute the {pack_name} pack")
 
