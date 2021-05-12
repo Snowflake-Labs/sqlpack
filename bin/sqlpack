@@ -6,13 +6,13 @@ import sqlpack
 
 class SQLPackCommands:
     @staticmethod
-    def list_packs():
-        packs = sqlpack.list_packs()
+    def list():
+        packs = sqlpack.list()
         print(*packs , sep = "\n")
 
     @staticmethod
-    def search_pack(pack_name):
-        sqlpack.search_pack(pack_name)
+    def search(pack_name):
+        sqlpack.search(pack_name)
 
     @staticmethod
     def print_sql(pack_name, data_file=None, **kwargs):

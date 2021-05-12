@@ -15,7 +15,7 @@ SQLPACK_PATH = [
 ]
 
 
-def list_packs():
+def list():
     packs_dir = path.join(path.dirname(__file__ ), '..', 'packs')
     if path.exists(packs_dir):
         packs = listdir(packs_dir)
@@ -25,8 +25,8 @@ def list_packs():
         return "Packs directory not found"
 
 
-def search_pack(pack_name):
-    packs = list_packs()
+def search(pack_name):
+    packs = list()
     found_in = []
     for pack in packs:
         if pack_name in pack:
