@@ -11,7 +11,7 @@ class SQLPackCommands:
 
     @staticmethod
     def search_pack(pack_name):
-        print(sqlpack.search_pack(pack_name))
+        sqlpack.search_pack(pack_name)
 
     @staticmethod
     def print_sql(pack_name, data_file=None, **kwargs):
