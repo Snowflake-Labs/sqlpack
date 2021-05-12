@@ -22,7 +22,7 @@ def list_packs():
         packs.sort()
         return packs
     else:
-        print("Packs directory not found", file=sys.stderr)
+        return "Packs directory not found"
 
 
 def search_pack(pack_name):
