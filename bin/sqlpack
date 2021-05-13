@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from typing import List
 import fire
 import sqlpack
 
@@ -8,11 +9,12 @@ class SQLPackCommands:
     @staticmethod
     def list():
         packs = sqlpack.list()
-        print(*packs , sep = "\n")
+        print(*packs, sep="\n") if type(packs) == list else print(packs)
 
     @staticmethod
     def search(pack_name):
-        sqlpack.search(pack_name)
+        result = sqlpack.search(pack_name)
+        print(*result, sep="\n") if type(result) == list else print(result)
 
     @staticmethod
     def print_sql(pack_name, data_file=None, **kwargs):
@@ -21,6 +23,7 @@ class SQLPackCommands:
     @staticmethod
     def print_sample_data(pack_name):
         sqlpack.print_sample_data(pack_name)
+
 
 if __name__ == '__main__':
     fire.Fire(SQLPackCommands)
