@@ -1,6 +1,5 @@
-// args
 
-var HANDLER_TYPE;
+// args
 
 // library
 
@@ -26,41 +25,64 @@ function exec(sqlText, binds=[]) {
 
 // business logic
 
-HANDLE = `
-MERGE INTO results.alerts d
-USING (
+RUN_TABLE = 'results.handled_alerts'
+
+HANDLE_ALERTS = `
+CREATE TEMP TABLE results.handled_alerts AS
+SELECT
+  id alert_id,
+  ARRAY_AGG(
+    CASE
+      WHEN value['type'] = 'ef-slack'
+      THEN slack_handler(alert, value)
+      WHEN value['type'] = 'ef-jira'
+      THEN jira_handler(alert, value)
+      ELSE OBJECT_CONSTRUCT(
+        'error', 'missing handler',
+        'handler', value['type']
+      )
+    END
+  ) handled
+FROM (
   SELECT
     id,
-    ARRAY_AGG(
-      ${HANDLER_TYPE}_handler(handler_args)
-    ) handled
-  FROM (
+    IFF(
+      IS_OBJECT(handlers),
+      ARRAY_CONSTRUCT(handlers),
+      handlers
+    ) handlers,
+    OBJECT_CONSTRUCT(*) alert
+  FROM data.alerts
+  WHERE handled IS NULL
+    AND ticket IS NULL
+    AND suppressed = FALSE
+    AND (
+      IS_OBJECT(handlers)
+      OR IS_ARRAY(handlers)
+   )
+), LATERAL FLATTEN(input => handlers)
+WHERE value['type'] IN (
+  'ef-slack',
+  'ef-jira'
+)
+GROUP BY id
+`
 
-    SELECT
-      id,
-      value handler_args
-    FROM (
-      SELECT
-        id,
-        IFF(
-          IS_OBJECT(handlers),
-          ARRAY_CONSTRUCT(handlers),
-          handlers
-        ) handlers_array
-      FROM alerts
-      WHERE handled IS NULL
-   ), LATERAL FLATTEN(input => handlers_array)
-   WHERE handler_args['type'] = '${HANDLER_TYPE}'
+COUNT_HANDLED = `SELECT COUNT(*) n FROM ${RUN_TABLE}`
 
-  )
-  GROUP BY id
-) s
-ON d.alert['ALERT_ID'] = s.id
-WHEN MATCHED
-THEN UPDATE
-  SET d.handled = s.handled
+HANDLE_ALL = `
+MERGE INTO results.alerts d
+USING ${RUN_TABLE} s
+ON (d.alert_id = s.alert_id)
+WHEN MATCHED THEN UPDATE SET d.handled=s.handled
 `
 
 return {
-  'handled': exec(HANDLE)
+  'handle_alerts': exec(HANDLE_ALERTS),
+  'handled': (
+    exec(COUNT_HANDLED)[0]['N'] > 0
+      ? exec(HANDLE_ALL)
+      : {'number of rows updated': 0, 'number of rows inserted': 0}
+  ),
+  'dropped': exec('DROP TABLE results.handled_alerts'),
 }

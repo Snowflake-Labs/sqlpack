@@ -43,7 +43,7 @@ USING TEMPLATE 'run-alert-processing.js'
 ;
 
 
-CREATE OR REPLACE PROCEDURE results.alert_dispatcher(handler_type STRING)
+CREATE OR REPLACE PROCEDURE results.alert_dispatcher()
 RETURNS VARIANT
 LANGUAGE JAVASCRIPT
 EXECUTE AS CALLER
