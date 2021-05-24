@@ -12,7 +12,7 @@ class SQLPackCommands:
     @staticmethod
     def search(pack_name):
         result = sqlpack.search(pack_name)
-        print(*result, sep="\n") if isinstance(packs, list) else print(result)
+        print(*result, sep="\n") if isinstance(result, list) else print(result)
 
     @staticmethod
     def print_sql(pack_name, data_file=None, **kwargs):
