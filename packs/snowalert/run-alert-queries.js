@@ -65,6 +65,8 @@ FROM rules.${QUERY_NAME}
 WHERE event_time BETWEEN ${FROM_TIME_SQL} AND ${TO_TIME_SQL}
 ;`;
 
+const ALERT_RUN_RESULT_COUNT = `SELECT COUNT(*) n FROM ${TEMP_NEW_ALERTS_TBL}`
+
 const MERGE_ALERTS_SQL = `
 MERGE INTO results.alerts AS alerts
 USING (
@@ -98,21 +100,30 @@ WHEN MATCHED
 WHEN NOT MATCHED
   THEN INSERT (
     alert,
+    alert_id,
     counter,
     alert_time,
     event_time
   )
   VALUES (
     new_alerts.alert,
+    new_alerts.alert['ALERT_ID'],
     new_alerts.counter,
     new_alerts.alert_time,
     new_alerts.event_time
   )
 ;`;
 
+const create_alerts_result = exec(CREATE_ALERTS_SQL)[0];
+const merge_alerts_result = (
+  exec(ALERT_RUN_RESULT_COUNT)[0]['N'] > 0
+    ? exec(MERGE_ALERTS_SQL)[0]
+    : {'number of rows updated': 0, 'number of rows inserted': 0}
+)
+
 return {
   'run_id': RUN_ID,
   'new_alerts_tbl': TEMP_NEW_ALERTS_TBL,
-  'create_alerts_result': exec(CREATE_ALERTS_SQL)[0],
-  'merge_alerts_result': exec(MERGE_ALERTS_SQL)[0],
+  'create_alerts_result': create_alerts_result,
+  'merge_alerts_result': merge_alerts_result,
 }
