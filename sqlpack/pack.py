@@ -21,9 +21,10 @@ def list():
         directories = listdir(packs_dir)
         packs = []
         for pack in directories:
-            content = listdir(path.join(packs_dir,pack))
-            if "main.sql.fmt" in content:
-                packs.append(pack)
+            if path.isdir(path.join(packs_dir, pack)):
+                content = listdir(path.join(packs_dir, pack))
+                if "main.sql.fmt" in content:
+                    packs.append(pack)
         packs.sort()
         return packs
     return "Packs directory not found"
