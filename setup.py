@@ -1,5 +1,4 @@
-from distutils.core import setup
-from setuptools import find_packages
+from setuptools import setup
 
 setup(
     name='sqlpack',
@@ -14,6 +13,7 @@ setup(
     scripts=['bin/sqlpack'],
     package_data={"sqlpack": ["*.py", "../packs/*/main.sql.fmt", "../packs/*/*.yaml"]},
     include_package_data=True,
+    exclude_package_data={"": [".DS_Store"]},
     keywords='SNOWFLAKE PACKS SNOWSQL SNOWSQL-PACKS',
     install_requires=[
         'fire',
