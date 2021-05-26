@@ -6,7 +6,7 @@
 --   copy_history_table_name: '{table_name}_copy_history'
 --   task_name: '{copy_history_table_name}_task
 
-CREATE OR REPLACE TABLE {copy_history_table_name} ( 
+CREATE TABLE IF NOT EXISTS {copy_history_table_name} ( 
     recorded_at TIMESTAMP_LTZ,
     lastseen_at TIMESTAMP_LTZ,
     file_name TEXT,
