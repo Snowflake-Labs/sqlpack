@@ -4,7 +4,7 @@
 -- - name: warehouse
 -- varmap:
 --   copy_history_table_name: '{table_name}_copy_history'
---   task_name: '{copy_history_table_name}_task
+--   task_name: '{copy_history_table_name}_task'
 
 CREATE TABLE IF NOT EXISTS {copy_history_table_name} ( 
     recorded_at TIMESTAMP_LTZ,
@@ -36,7 +36,7 @@ CREATE OR REPLACE TASK {task_name}
 WAREHOUSE = {warehouse}
 SCHEDULE = 'USING CRON * * * * * UTC' 
 AS
-MERGE INTO {copy_history_table_name} tar USING
+MERGE INTO {copy_history_table_name} tgt USING
     ( 
         SELECT 
             CURRENT_TIMESTAMP() new,
@@ -49,12 +49,12 @@ MERGE INTO {copy_history_table_name} tar USING
             ) 
     ) src 
 ON ( 
-        tar.file_name = src.raw:FILE_NAME
-        and tar.status= src.raw:STATUS 
+        tgt.file_name = src.raw:FILE_NAME
+        and tgt.status= src.raw:STATUS 
     ) 
 WHEN MATCHED THEN
 UPDATE SET 
-    tar.lastseen_at = src.new
+    tgt.lastseen_at = src.new
 WHEN NOT MATCHED THEN
 INSERT VALUES ( 
     src.new::TIMESTAMP_LTZ,
