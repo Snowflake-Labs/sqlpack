@@ -5,8 +5,6 @@
 -- - name: days
 --   default: 90
 -- - name: time_column
--- - name: limit
---   default: 100
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
@@ -134,7 +132,7 @@ MERGE INTO {target_table} stored USING (
             TIME_SLICES_BEFORE_T (
               {days} * 24,
               60 * 60,
-              DATE_TRUNC(HOUR, CURRENT_TIMESTAMP(()))
+              DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
           )
         )
     ) t
@@ -144,7 +142,7 @@ MERGE INTO {target_table} stored USING (
         {time_column} event_time,
         OBJECT_CONSTRUCT(
           'city',city,
-          'users',user,
+          'users',user
         ) AS groups
       FROM
         {base_table}
@@ -233,9 +231,7 @@ SELECT * FROM
             ) t
         ) USING (groups, slice_start, slice_end)
       ORDER BY
-        n DESC {
-      limit {limit}
-      } -- optional limit
+        n DESC 
     )
   WHERE
     slice_start > DATEADD(
