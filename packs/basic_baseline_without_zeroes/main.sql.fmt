@@ -198,7 +198,7 @@ FROM (
                 RIGHT OUTER JOIN( 
                     SELECT 
                         groups ,
-                        DATE_TRUNC(HOUR, CURRENT_TIMESTAMP) current_hour ,
+                        DATE_TRUNC(HOUR, CURRENT_TIMESTAMP()) current_hour ,
                         APPROX_PERCENTILE_ACCUMULATE(n) 
                         OVER (
                             PARTITION BY GROUPS
