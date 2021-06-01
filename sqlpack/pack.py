@@ -27,7 +27,7 @@ def list_packs():
 def format(find, replace):
     found = find
     for k in replace:
-        found = re.sub(f'{{{k}}}', replace[k], found)
+        found = re.sub(f'{{{k}}}', str(replace[k]), found)
     return find if find == found else format(found, replace)
 
 
