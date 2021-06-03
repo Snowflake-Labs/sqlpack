@@ -29,7 +29,7 @@
 -- landing tables for data and views to reference it
 
 CREATE OR REPLACE TABLE {landing_log_table} (
-    recorded_At TIMESTAMP_NTZ,
+    recorded_at TIMESTAMP_NTZ,
     raw VARIANT,
     uuid STRING,
     published TIMESTAMP_NTZ,
@@ -50,7 +50,7 @@ CREATE OR REPLACE TABLE {landing_log_table} (
 );
 
 CREATE OR REPLACE TABLE {landing_user_table} (
-    recorded_At TIMESTAMP_NTZ,
+    recorded_at TIMESTAMP_NTZ,
     raw VARIANT,
     id STRING,
     status STRING,
@@ -66,7 +66,7 @@ CREATE OR REPLACE TABLE {landing_user_table} (
 );
 
 CREATE OR REPLACE TABLE {landing_group_table} (
-    recorded_At TIMESTAMP_NTZ,
+    recorded_at TIMESTAMP_NTZ,
     raw VARIANT,
     id STRING,
     created TIMESTAMP_NTZ,
@@ -83,10 +83,10 @@ CREATE OR REPLACE TABLE {landing_group_table} (
 CREATE OR REPLACE VIEW okta_snowbiz_users_latest AS
 SELECT *
 FROM {landing_user_table}
-WHERE recorded_At > CURRENT_TIMESTAMP - INTERVAL '24 hours'
+WHERE recorded_at > CURRENT_TIMESTAMP - INTERVAL '24 hours'
 QUALIFY 1=ROW_NUMBER() OVER (
   PARTITION BY profile:login
-  ORDER BY recorded_At DESC
+  ORDER BY recorded_at DESC
 )
 ;
 
