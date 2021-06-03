@@ -5,9 +5,13 @@
 -- - name: days
 --   default: 90
 -- - name: time_column
+-- - name: user_column
+-- - name: city_column
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
+--   city_and_user: "OBJECT_CONSTRUCT( 'city',{city_column}, 'users',{user_column})"
+
 
 
 CREATE OR REPLACE TABLE {target_table} (
@@ -140,10 +144,7 @@ MERGE INTO {target_table} stored USING (
       -- calculate sums in those slices
       SELECT
         {time_column} event_time,
-        OBJECT_CONSTRUCT(
-          'city',city,
-          'users',user
-        ) AS groups
+        {city_and_user} AS groups
       FROM
         {base_table}
     ) c ON c.event_time BETWEEN t.slice_start
@@ -179,7 +180,7 @@ VALUES
 
 
 -- BASIC_BASELINE_VIEW
-CREATE OR REPLACE VIEW { base_table } _pct_baseline AS
+CREATE OR REPLACE VIEW {base_table} _pct_baseline AS
 SELECT
     *
 FROM
@@ -204,7 +205,7 @@ FROM
                     slice_start,
                     slice_end
                 FROM
-                    { target_table }
+                    {target_table}
                     RIGHT JOIN (
                         -- zero filled matrix of (groups X slices)
                         SELECT
@@ -216,7 +217,7 @@ FROM
                                 SELECT
                                     DISTINCT groups
                                 FROM
-                                    { target_table }
+                                    {target_table}
                             ) g
                             CROSS JOIN (
                                 SELECT
@@ -225,7 +226,7 @@ FROM
                                 FROM
                                     TABLE (
                                         TIME_SLICES_BEFORE_T (
-                                            { days } * 24,
+                                            {days} * 24,
                                             60 * 60,
                                             DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
                                         )
@@ -238,7 +239,7 @@ FROM
         WHERE
             slice_start > DATEADD(
                 HOUR,
-                -24 * { days },
+                -24 * {days},
                 DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
             )
     )
@@ -247,7 +248,7 @@ WHERE
         SELECT
             MAX(slice_start)
         FROM
-            { target_table }
+            {target_table}
     )
 ORDER BY
     n DESC;
