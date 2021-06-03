@@ -1,0 +1,4 @@
+base_table: okta_logs
+warehouse: ingestion_wh
+days: 10
+time_column: event_time
