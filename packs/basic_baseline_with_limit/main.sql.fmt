@@ -6,10 +6,12 @@
 --   default: 90
 -- - name: time_column
 -- - name: limit
+-- - name: city_column
+-- - name: user_column
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
-
+--   city_and_user: "OBJECT_CONSTRUCT( 'city',{city_column}, 'users',{user_column})"
 
 CREATE OR REPLACE TABLE {target_table} (
   slice_start timestamp_ltz,
@@ -141,10 +143,7 @@ MERGE INTO {target_table} stored USING (
       -- calculate sums in those slices
       SELECT
         {time_column} event_time,
-        OBJECT_CONSTRUCT(
-          'city',city,
-          'users',user
-        ) AS groups
+        {city_and_user} AS groups
       FROM
         {base_table}
     ) c ON c.event_time BETWEEN t.slice_start
