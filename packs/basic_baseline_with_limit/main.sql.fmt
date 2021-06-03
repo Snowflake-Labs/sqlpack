@@ -180,7 +180,7 @@ VALUES
 
 
 -- BASIC_BASELINE_VIEW
-CREATE OR REPLACE VIEW { base_table } _pct_baseline AS
+CREATE OR REPLACE VIEW {base_table}_pct_baseline AS
 SELECT
     *
 FROM
@@ -226,7 +226,7 @@ FROM
                                 FROM
                                     TABLE (
                                         TIME_SLICES_BEFORE_T (
-                                            { days } * 24,
+                                            {days} * 24,
                                             60 * 60,
                                             DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
                                         )
@@ -240,7 +240,7 @@ FROM
         WHERE
             slice_start > DATEADD(
                 HOUR,
-                -24 * { days },
+                -24 * {days},
                 DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
             )
     )
