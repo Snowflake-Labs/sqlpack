@@ -37,10 +37,11 @@ function fillArray(value, len) {
 }
 
 const RUN_ID = Math.random().toString(36).substring(2).toUpperCase();
-const TEMP_NEW_ALERTS_TBL = `results.RUN_${RUN_ID}_${QUERY_NAME}`;
+const RAW_ALERTS_TABLE = `results.raw_alerts`
 
-const CREATE_ALERTS_SQL = `CREATE TEMP TABLE ${TEMP_NEW_ALERTS_TBL} AS
-SELECT OBJECT_CONSTRUCT(
+const CREATE_ALERTS_SQL = `INSERT INTO ${RAW_ALERTS_TABLE}
+SELECT '${RUN_ID}' run_id
+     , OBJECT_CONSTRUCT(
          'ALERT_ID', UUID_STRING(),
          'QUERY_NAME', '${QUERY_NAME}',
          'QUERY_ID', IFNULL(QUERY_ID::VARIANT, PARSE_JSON('null')),
@@ -65,65 +66,8 @@ FROM rules.${QUERY_NAME}
 WHERE event_time BETWEEN ${FROM_TIME_SQL} AND ${TO_TIME_SQL}
 ;`;
 
-const ALERT_RUN_RESULT_COUNT = `SELECT COUNT(*) n FROM ${TEMP_NEW_ALERTS_TBL}`
-
-const MERGE_ALERTS_SQL = `
-MERGE INTO results.alerts AS alerts
-USING (
-
-  SELECT ANY_VALUE(alert) AS alert
-       , SUM(counter) AS counter
-       , MIN(alert_time) AS alert_time
-       , MIN(event_time) AS event_time
-
-  FROM ${TEMP_NEW_ALERTS_TBL}
-  GROUP BY
-    alert:OBJECT,
-    alert:DESCRIPTION,
-    alert:EVENT_DATA,
-    alert:TITLE
-
-) AS new_alerts
-
-ON (
-  alerts.alert:EVENT_TIME > ${FROM_TIME_SQL}
-  AND alerts.alert:OBJECT = new_alerts.alert:OBJECT
-  AND alerts.alert:DESCRIPTION = new_alerts.alert:DESCRIPTION
-  AND alerts.alert:EVENT_DATA = new_alerts.alert:EVENT_DATA
-  AND alerts.alert:TITLE = new_alerts.alert:TITLE
-)
-
-WHEN MATCHED
-  THEN UPDATE
-  SET counter = alerts.counter + new_alerts.counter
-
-WHEN NOT MATCHED
-  THEN INSERT (
-    alert,
-    alert_id,
-    counter,
-    alert_time,
-    event_time
-  )
-  VALUES (
-    new_alerts.alert,
-    new_alerts.alert['ALERT_ID'],
-    new_alerts.counter,
-    new_alerts.alert_time,
-    new_alerts.event_time
-  )
-;`;
-
-const create_alerts_result = exec(CREATE_ALERTS_SQL)[0];
-const merge_alerts_result = (
-  exec(ALERT_RUN_RESULT_COUNT)[0]['N'] > 0
-    ? exec(MERGE_ALERTS_SQL)[0]
-    : {'number of rows updated': 0, 'number of rows inserted': 0}
-)
 
 return {
   'run_id': RUN_ID,
-  'new_alerts_tbl': TEMP_NEW_ALERTS_TBL,
-  'create_alerts_result': create_alerts_result,
-  'merge_alerts_result': merge_alerts_result,
+  'create_alerts_result': exec(CREATE_ALERTS_SQL)[0],
 }

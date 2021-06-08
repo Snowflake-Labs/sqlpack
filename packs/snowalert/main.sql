@@ -25,7 +25,25 @@ CREATE SCHEMA IF NOT EXISTS data;
 CREATE SCHEMA IF NOT EXISTS rules;
 CREATE SCHEMA IF NOT EXISTS results;
 
+CREATE TABLE IF NOT EXISTS results.raw_alerts(
+  run_id STRING,
+  alert VARIANT,
+  alert_time TIMESTAMP_LTZ(9),
+  event_time TIMESTAMP_LTZ(9),
+  ticket STRING,
+  suppressed BOOLEAN,
+  suppression_rule STRING DEFAULT NULL,
+  counter INTEGER DEFAULT 1,
+  correlation_id STRING,
+  handled VARIANT
+);
+
+CREATE STREAM IF NOT EXISTS results.raw_alerts_stream
+ON TABLE results.raw_alerts
+;
+
 CREATE TABLE IF NOT EXISTS results.alerts(
+  alert_id STRING,
   alert VARIANT,
   alert_time TIMESTAMP_LTZ(9),
   event_time TIMESTAMP_LTZ(9),
@@ -59,48 +77,3 @@ CREATE TABLE IF NOT EXISTS results.ingestion_metadata(
   v VARIANT
 );
 
-# account
-GRANT EXECUTE TASK ON ACCOUNT TO ROLE {role};
-
-# data
-GRANT ALL PRIVILEGES
-ON ALL SCHEMAS
-IN DATABASE {database}
-TO ROLE {role};
-
-GRANT ALL PRIVILEGES
-ON ALL VIEWS
-IN SCHEMA data
-TO ROLE {role};
-
-GRANT ALL PRIVILEGES
-ON ALL TABLES
-IN SCHEMA data
-TO ROLE {role};
-
-GRANT ALL PRIVILEGES
-ON ALL FUNCTIONS
-IN SCHEMA data
-TO ROLE {role};
-
-# rules
-GRANT OWNERSHIP
-ON ALL VIEWS
-IN SCHEMA rules
-TO ROLE {role};
-
-GRANT ALL PRIVILEGES
-ON ALL FUNCTIONS
-IN SCHEMA rules
-TO ROLE {role};
-
-# results
-GRANT ALL PRIVILEGES
-ON ALL TABLES
-IN SCHEMA results
-TO ROLE {role};
-
-GRANT ALL PRIVILEGES
-ON ALL PROCEDURES
-IN SCHEMA results
-TO ROLE {role};
