@@ -206,7 +206,7 @@ FROM (
             groups,
             pct
         FROM
-            {base_table}_counts
+            {target_table}
             RIGHT OUTER JOIN (
                 SELECT
                     groups,
@@ -215,7 +215,7 @@ FROM (
                         PARTITION BY GROUPS
                     ) pct
                 FROM
-                    {base_table} _counts
+                    {target_table}
                 WHERE
                     slice_start BETWEEN DATEADD(HOUR, -24 * {days} - 1, current_hour)
                     AND DATEADD(HOUR, -1, current_hour)
