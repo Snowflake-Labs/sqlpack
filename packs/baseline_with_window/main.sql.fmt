@@ -19,13 +19,14 @@ CREATE OR REPLACE TABLE {target_table} (
 
 
 CREATE FUNCTION IF NOT EXISTS time_slices (
-    n NUMBER, s TIMESTAMP_NTZ,
+    n NUMBER, 
+    s TIMESTAMP_NTZ, 
     e TIMESTAMP_NTZ
-) 
+)
 RETURNS TABLE (
     slice_start TIMESTAMP_NTZ,
-    lice_end TIMESTAMP_NTZ
-    ) 
+    slice_end TIMESTAMP_NTZ
+)
 AS 
 $$
 SELECT
@@ -38,18 +39,19 @@ SELECT
   ) AS slice_start,
   DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
 FROM
-  TABLE(GENERATOR(ROWCOUNT => n))
-$$ ;
+    TABLE(GENERATOR(ROWCOUNT => n)) 
+$$;
 
 
 CREATE FUNCTION IF NOT EXISTS time_slices (
-    n NUMBER, s TIMESTAMP_LTZ,
+    n NUMBER, 
+    s TIMESTAMP_LTZ, 
     e TIMESTAMP_LTZ
-) 
+)
 RETURNS TABLE (
     slice_start TIMESTAMP_LTZ,
     slice_end TIMESTAMP_LTZ
-) 
+)
 AS 
 $$
 SELECT
@@ -61,19 +63,20 @@ SELECT
     s
   ) AS slice_start,
   DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
-FROM TABLE(GENERATOR(ROWCOUNT => n))
-$$ ;
+FROM 
+    TABLE(GENERATOR(ROWCOUNT => n))
+$$;
 
 
 CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
-    num_slices NUMBER, 
-    seconds_in_slice NUMBER, 
+    num_slices NUMBER,
+    seconds_in_slice NUMBER,
     t TIMESTAMP_NTZ
 ) 
 RETURNS TABLE (
     slice_start TIMESTAMP_NTZ,
     slice_end TIMESTAMP_NTZ
-) 
+)
 AS 
 $$
 SELECT
@@ -86,78 +89,83 @@ FROM TABLE(
       t
     )
   )
-$$ ;
+$$;
 
 
 CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
-    num_slices NUMBER, 
-    seconds_in_slice NUMBER, 
+    num_slices NUMBER,
+    seconds_in_slice NUMBER,
     t TIMESTAMP_LTZ
-) 
+)
 RETURNS TABLE (
     slice_start TIMESTAMP_LTZ,
     slice_end TIMESTAMP_LTZ
-) 
+)
 AS 
 $$
 SELECT
   slice_start,
   slice_end
-FROM
-  TABLE(
+FROM TABLE
+(
     time_slices (
       num_slices,
       DATEADD(sec, - seconds_in_slice * num_slices, t),
       t
     )
   )
-$$ ;
-
-
-CREATE OR REPLACE TASK {task_name}
+$$;
+    
+    
+CREATE OR REPLACE TASK {task_name} 
 SCHEDULE = 'USING CRON 0 * * * * UTC' 
-WAREHOUSE = snowalert AS
+WAREHOUSE = {warehouse} 
+AS 
 MERGE INTO {target_table} stored USING (
     -- calculate sums
-    SELECT COUNT(*) n,
+    SELECT
+        COUNT(*) n,
         slice_start,
         slice_end,
         groups
-    FROM (-- make the slices
-        SELECT 
-            slice_start,
-            slice_end
-            FROM TABLE (
-                TIME_SLICES_BEFORE_T (
-                    90 * 24, 60 * 60, 
-                    DATE_TRUNC(HOUR, CURRENT_TIMESTAMP()())
+    FROM
+        (
+            -- make the slices
+            SELECT
+                slice_start,
+                slice_end
+            FROM
+                TABLE (
+                    TIME_SLICES_BEFORE_T (
+                        {days} * 24,
+                        60 * 60,
+                        DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
+                    )
                 )
-            )
-    ) t
-    JOIN (
-        -- calculate sums in those slices
-        SELECT 
-            event_time event_time,
-            {city_and_user} AS groups
-        FROM 
-            {base_table}) c 
-        ON 
-            c.event_time BETWEEN t.slice_start AND t.slice_end
-        GROUP BY 
-            slice_start,
-            slice_end,
-            groups
-    ) calcd 
-ON (
+        ) t
+        JOIN (
+            -- calculate sums in those slices
+            SELECT
+                {time_column} event_time,
+                {city_and_user} AS groups
+            FROM
+                {base_table}
+        ) c ON c.event_time BETWEEN t.slice_start
+        AND t.slice_end
+    GROUP BY
+        slice_start,
+        slice_end,
+        groups
+) calcd ON (
     stored.groups = calcd.groups
     AND stored.slice_start = calcd.slice_start
     AND stored.slice_end = calcd.slice_end
-) 
+)
 WHEN NOT MATCHED THEN
 INSERT (
     slice_start,
     slice_end,
-    groups,
+    groups, 
     n
 )
 VALUES (
@@ -166,13 +174,13 @@ VALUES (
     groups,
     n
 );
+    
+    
+ALTER TASK {task_name} RESUME;
 
-
-ALTER TASK {task_name}RESUME;
 
 --BASIC_BASELINE_VIEW_WITH_WINDOW
-CREATE OR REPLACE VIEW {base_table}_pct_baseline_window 
-AS
+CREATE OR REPLACE VIEW {base_table}_pct_baseline_window AS
 SELECT
     *
 FROM
@@ -236,15 +244,14 @@ FROM
                                                 )
                                             )
                                     ) t
-                        WHERE
-                            slice_start > DATEADD(
-                                HOUR,
-                                -24 * (90 + 1),
-                                DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
-                            )
-                    ) 
-              USING (groups, slice_start, slice_end)
-              )
+                                WHERE
+                                    slice_start > DATEADD(
+                                        HOUR,
+                                        -24 * (90 + 1),
+                                        DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
+                                    )
+                            ) USING (groups, slice_start, slice_end)
+                    )
             )
         WHERE
             slice_start > DATEADD(
@@ -261,5 +268,4 @@ WHERE
             {target_table}
     )
 ORDER BY
-    n DESC
-;
+    n DESC;
