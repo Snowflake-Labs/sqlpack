@@ -1,9 +1,8 @@
-schema: snowalert.data
-warehouse: SNOWALERT_WAREHOUSE
-api_integration: sfc_security_geff_api_integration
-domain: replicate.npmjs.com/_all_docs
-s3_bucket_name: pat-sfc-security-geff-bucket
-aws_role_arn: aws
-aws_api_gateway_id: f5bxppu6mf
-aws_api_gateway_region: us-west-2
-aws_api_gateway_stage_name: prod
+schema: schema_name
+warehouse: eample_warehouse
+api_integration: api_integration_name
+s3_bucket_name: bucket_name
+aws_role_arn: aws_role
+aws_api_gateway_id: gateway_id
+aws_api_gateway_region: us-west-5
+aws_api_gateway_stage_name: test
