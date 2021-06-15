@@ -9,7 +9,7 @@
 -- - name: aws_api_gateway_region
 -- - name: aws_api_gateway_stage_name
 -- varmap:
---   domain: 'replicate.npmjs.com/_all_docs'
+--   url: 'replicate.npmjs.com/_all_docs'
 --   stage_name: '{s3_bucket_name}/npm_packages'
 --   pipe_name: npm_packages
 --   raw_table: npm_packages_raw
@@ -46,7 +46,7 @@ VOLATILE
 COMMENT='https://github.com/npm/registry/blob/master/docs/REPLICATE-API.md'
 API_INTEGRATION={API_INTEGRATION}
 HEADERS=(
-    'url'='https://{domain}'
+    'url'='https://{url}'
     'results-path' = 'rows'
     'destination-uri' = 's3://{s3_bucket_name}/npm_packages/'
 )
