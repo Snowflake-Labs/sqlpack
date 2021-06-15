@@ -3,7 +3,6 @@
 -- - name: schema
 -- - name: warehouse 
 -- - name: api_integration
--- - name: domain
 -- - name: s3_bucket_name
 -- - name: aws_role_arn
 -- - name: aws_api_gateway_id
