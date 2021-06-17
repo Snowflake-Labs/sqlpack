@@ -2,12 +2,11 @@
 -- params:
 -- - name: base_table
 -- - name: warehouse
--- - name: days
+-- - name: lookback_time_in_days
 --   default: 90
 -- - name: time_column
 -- - name: limit
--- - name: user_column
--- - name: city_column
+-- - name: groupby_columns
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
@@ -141,7 +140,7 @@ MERGE INTO {target_table} stored USING (
             FROM
                 TABLE (
                     TIME_SLICES_BEFORE_T (
-                        {days} * 24,
+                        {lookback_time_in_days} * 24,
                         60 * 60,
                         DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
                     )
@@ -151,7 +150,7 @@ MERGE INTO {target_table} stored USING (
             -- calculate sums in those slices
             SELECT
                 {time_column} event_time,
-                {city_and_user} AS groups
+                OBJECT_CONSTRUCT({groupby_columns}) AS groups
             FROM
                 {base_table}
         ) c ON c.event_time BETWEEN t.slice_start
@@ -230,7 +229,7 @@ FROM
                                 FROM
                                     TABLE (
                                         TIME_SLICES_BEFORE_T (
-                                            {days} * 24,
+                                            {lookback_time_in_days} * 24,
                                             60 * 60,
                                             DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
                                         )
@@ -244,7 +243,7 @@ FROM
         WHERE
             slice_start > DATEADD(
                 HOUR,
-                -24 * {days},
+                -24 * {lookback_time_in_days},
                 DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
             )
     )
