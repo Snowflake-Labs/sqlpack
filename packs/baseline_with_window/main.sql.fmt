@@ -2,13 +2,13 @@
 -- params:
 -- - name: base_table
 -- - name: warehouse
--- - name: days
+-- - name: lookback_time_in_days
 --   default: 90
 -- - name: time_column
+-- - name: groupby_columns
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count_window'
---   city_and_user: "OBJECT_CONSTRUCT('city', city_column, 'users', user_column)"
 
 CREATE OR REPLACE TABLE {target_table} (
     slice_start timestamp_ltz,
@@ -137,7 +137,7 @@ MERGE INTO {target_table} stored USING (
             FROM
                 TABLE (
                     TIME_SLICES_BEFORE_T (
-                        {days} * 24,
+                        {lookback_time_in_days} * 24,
                         60 * 60,
                         DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
                     )
@@ -147,7 +147,7 @@ MERGE INTO {target_table} stored USING (
             -- calculate sums in those slices
             SELECT
                 {time_column} event_time,
-                {city_and_user} AS groups
+                OBJECT_CONSTRUCT({groupby_columns}) AS groups
             FROM
                 {base_table}
         ) c ON c.event_time BETWEEN t.slice_start
