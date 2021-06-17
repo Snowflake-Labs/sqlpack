@@ -4,13 +4,11 @@
 -- - name: warehouse
 -- - name: days
 --   default: 90
--- - name: time_column
--- - name: user_column
--- - name: city_column
+-- - name: groupby_columns
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
---   city_and_user: "OBJECT_CONSTRUCT('city',{city_column}, 'users',{user_column})"
+
 
 
 CREATE OR REPLACE TABLE {target_table} (
@@ -150,7 +148,7 @@ MERGE INTO {target_table} stored USING (
             -- calculate sums in those slices
             SELECT
                 {time_column} event_time,
-                {city_and_user} AS groups
+                OBJECT_CONSTRUCT({groupby_columns}) AS groups
             FROM
                 {base_table}
         ) c ON c.event_time BETWEEN t.slice_start
