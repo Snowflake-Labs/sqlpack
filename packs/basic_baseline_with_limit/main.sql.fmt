@@ -10,7 +10,6 @@
 -- varmap:
 --   target_table: '{base_table}_counts'
 --   task_name: '{base_table}_count'
---   city_and_user: "OBJECT_CONSTRUCT('city',{city_column}, 'users',{user_column})"
 
 
 CREATE OR REPLACE TABLE {target_table} (
