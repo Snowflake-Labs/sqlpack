@@ -2,7 +2,7 @@
 -- params:
 -- - name: base_table
 -- - name: warehouse
--- - name: days
+-- - name: lookback_time_in_days
 --   default: 90
 -- - name: groupby_columns
 -- varmap:
@@ -138,7 +138,7 @@ MERGE INTO {target_table} stored USING (
             FROM
                 TABLE (
                     TIME_SLICES_BEFORE_T (
-                        {days} * 24,
+                        {lookback_time_in_days} * 24,
                         60 * 60,
                         DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
                     )
@@ -227,7 +227,7 @@ FROM
                                 FROM
                                     TABLE (
                                         TIME_SLICES_BEFORE_T (
-                                            {days} * 24,
+                                            {lookback_time_in_days} * 24,
                                             60 * 60,
                                             DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
                                         )
@@ -240,7 +240,7 @@ FROM
         WHERE
             slice_start > DATEADD(
                 HOUR,
-                -24 * {days},
+                -24 * {lookback_time_in_days},
                 DATE_TRUNC(HOUR, CURRENT_TIMESTAMP)
             )
     )
