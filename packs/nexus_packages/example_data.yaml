@@ -1,4 +1,4 @@
-aws_api_gateway_id: gateway_id
+aws_api_gateway_id: a1b2c3
 aws_api_gateway_region: us-west-2
 aws_api_gateway_stage_name: test
 snowflake_api_integration: example_api_integration
