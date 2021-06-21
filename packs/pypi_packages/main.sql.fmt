@@ -1,0 +1,165 @@
+-- ---
+-- params:
+-- - name: warehouse 
+-- - name: api_integration
+-- - name: s3_bucket_name
+-- - name: aws_role_arn
+-- - name: aws_api_gateway_id
+-- - name: aws_api_gateway_region
+-- - name: aws_api_gateway_stage_name
+-- varmap:
+--   data_table: pypi_packages
+--   destination_uri: 's3://{s3_bucket_name}/pypi_packages/'
+--   stage_name: '{data_table}_stage'
+--   pipe_name: '{data_table}_pipe'
+--   storage_integration_name: 'integration'
+--   raw_table: '{data_table}_raw'
+--   invoke_ef_task_name: 'load_{data_table}_task'
+--   task_run_table: 'load_{data_table}_task_runs'
+--   stream_name: '{raw_table}_stream'
+--   load_into_landing_task: '{data_table}_task'
+
+
+
+----------------
+-- pypi packages
+----------------
+-- 1. EF
+-- 2. Pipe: To load into raw table
+-- 3. Raw table
+-- 4. Task to invoke external function and load data to raw table
+-- 5. Landing table
+-- 6. Stream to monitor diffs on the raw table
+-- 7. Task to read from stream and write to landing table
+
+
+-------------------------------
+-- 1.  Create External Function
+-------------------------------
+CREATE OR REPLACE EXTERNAL FUNCTION pypi_packages()
+RETURNS VARIANT
+RETURNS NULL ON NULL INPUT
+VOLATILE
+COMMENT='https://github.com/pypi/registry/blob/master/docs/REPLICATE-API.md'
+API_INTEGRATION={api_integration}
+HEADERS=(
+    'url'='https://pypi.org/pypi'
+    'method-name'='list_packages'
+    'destination-uri'='{destination_uri}'
+)
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/https'
+;
+
+-------------
+-- Storage integration for stage
+-------------
+CREATE STORAGE INTEGRATION {storage_integration_name}
+  TYPE = external_stage
+  storage_provider = s3
+  storage_aws_role_arn = '{aws_role_arn}'
+  ENABLED = true
+  storage_allowed_locations = ('{destination_uri}');
+
+
+
+------------
+-- Stage
+------------
+CREATE OR REPLACE STAGE {stage_name}
+  url='{destination_uri}'
+  storage_integration = {storage_integration_name};
+
+
+----------------------------------
+-- 2. Pipe: To load into raw table
+----------------------------------
+CREATE OR REPLACE PIPE {pipe_name}
+    AUTO_INGEST=TRUE
+AS
+COPY INTO {raw_table}(
+    name, recorded_at
+)
+FROM (
+    SELECT CURRENT_TIMESTAMP, $1::STRING
+    FROM @{stage_name}
+)
+;
+
+---------------
+-- 3. Raw table
+---------------
+CREATE TABLE IF NOT EXISTS {raw_table}(
+    name STRING,
+    recorded_at TIMESTAMP_NTZ
+)
+;
+
+-------------------------------
+-- 4.  Create task to invoke EF
+-------------------------------
+-- task run table
+CREATE TABLE IF NOT EXISTS {task_run_table}(
+    response VARIANT,
+    recorded_at TIMESTAMP_NTZ
+)
+;
+
+CREATE OR REPLACE TASK {invoke_ef_task_name}
+WAREHOUSE={warehouse}
+SCHEDULE='USING CRON */30 * * * * UTC'
+AS
+INSERT INTO {task_run_table}(
+    response,
+    recorded_at
+)
+SELECT
+  pypi_packages() response,
+  CURRENT_TIMESTAMP recorded_at
+;
+ALTER TASK {invoke_ef_task_name} RESUME;
+
+----------------
+-- 5. Data Table
+----------------
+CREATE TABLE IF NOT EXISTS {data_table}(
+    name STRING,
+    recorded_at TIMESTAMP_NTZ,
+    updated_at TIMESTAMP_NTZ
+)
+;
+
+-------------------------
+-- 6. Stream on Raw table
+-------------------------
+CREATE STREAM IF NOT EXISTS {stream_name}
+ON TABLE {raw_table}
+;
+
+----------------------------------------------------------
+-- 7. Task to read from stream and load into landing table
+----------------------------------------------------------
+CREATE OR REPLACE TASK {load_into_landing_task}
+WAREHOUSE={warehouse}
+SCHEDULE='USING CRON * * * * * UTC'
+WHEN
+    SYSTEM$STREAM_HAS_DATA('{stream_name}')
+AS
+MERGE INTO {data_table} dst
+USING (
+    SELECT name recorded_at,
+    FROM {stream_name}
+    QUALIFY 1=ROW_NUMBER() OVER (
+        PARTITION BY name
+        ORDER BY recorded_at DESC
+    )
+) src
+ON src.name = dst.name
+WHEN MATCHED THEN UPDATE
+    SET updated_at = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN INSERT (
+    name, recorded_at, updated_at
+) VALUES (
+    src.name, src.recorded_at, CURRENT_TIMESTAMP
+)
+;
+ALTER TASK {load_into_landing_task} RESUME;
