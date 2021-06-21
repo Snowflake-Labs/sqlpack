@@ -13,9 +13,6 @@
 --   load_data_table_task: '{data_table}_task'
 
 
-USE ROLE security_prodexec_rl;
-USE SCHEMA snowalert.prodexec;
-USE WAREHOUSE {warehouse};
 ---------------------
 -- 1. EF to get repos
 ---------------------
@@ -89,8 +86,6 @@ ON TABLE {raw_table}
 ----------------
 -- 6. Data Table
 ----------------
-USE ROLE security_ingest_rl;
-USE SCHEMA snowalert.data;
 
 CREATE TABLE IF NOT EXISTS {data_table}(
     registry STRING,
@@ -101,28 +96,9 @@ CREATE TABLE IF NOT EXISTS {data_table}(
     updated_at TIMESTAMP_NTZ
 );
 
-
-GRANT SELECT
-ON {data_table}
-TO ROLE security_engineer
-;
-
-GRANT SELECT
-ON {data_table}
-TO ROLE security_modeling_rl
-;
-
-GRANT SELECT, UPDATE, INSERT
-ON {data_table}
-TO security_prodexec_rl
-;
-
 -------------------------------------------------------
 -- 7. Task to read from stream and load into data table
 -------------------------------------------------------
-USE ROLE security_prodexec_rl;
-USE SCHEMA snowalert.prodexec;
-USE WAREHOUSE {warehouse};
 
 CREATE OR REPLACE TASK {load_data_table_task}
     WAREHOUSE={warehouse}
