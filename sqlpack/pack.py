@@ -15,13 +15,30 @@ SQLPACK_PATH = [
 ]
 
 
-def list_packs():
-    packs_dir = path.join(path.dirname(__file__ ), '..', 'packs')
+def list():
+    packs_dir = path.join(path.dirname(__file__), '..', 'packs')
     if path.exists(packs_dir):
-        for pack in listdir(packs_dir):
-            print(pack)
-    else:
-        print("Packs directory not found", file=sys.stderr)
+        directories = listdir(packs_dir)
+        packs = []
+        for pack in directories:
+            if path.isdir(path.join(packs_dir, pack)):
+                content = listdir(path.join(packs_dir, pack))
+                if "main.sql.fmt" in content:
+                    packs.append(pack)
+        packs.sort()
+        return packs
+    return "Packs directory not found"
+
+
+def search(pack_name):
+    packs = list()
+    found_in = []
+    for pack in packs:
+        if pack_name in pack:
+            found_in.append(pack)
+    if found_in:
+        return found_in
+    return f"{pack_name} pack not available. Please refer to https://github.com/Snowflake-Labs/sqlpacks/blob/main/CONTRIBUTING.md if you wish to contribute the {pack_name} pack"
 
 
 def format(find, replace):
@@ -105,4 +122,3 @@ def print_sql(pack_name, data_file=None, **kwargs):
         else:
             for name in missing_params:
                 print("MISSING VALUE FOR", name, file=sys.stderr)
-
