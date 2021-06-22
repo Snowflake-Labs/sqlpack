@@ -5,6 +5,7 @@
 -- - name: aws_api_gateway_stage_name
 -- - name: snowflake_api_integration
 -- - name: warehouse
+-- - name: domain
 -- varmap:
 --   data_table: 'nexus_packages'
 --   raw_table: '{data_table}_raw'
@@ -20,7 +21,7 @@ CREATE OR REPLACE EXTERNAL FUNCTION nexus_get_repos()
 RETURNS VARIANT
 API_INTEGRATION={snowflake_api_integration}
 HEADERS = (
-    'url'='https://nexus.int.snowflakecomputing.com/service/rest/v1/repositories'
+    'url'='https://{domain}/service/rest/v1/repositories'
 )
 AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/https'
 ;
@@ -35,7 +36,7 @@ VOLATILE
 API_INTEGRATION={snowflake_api_integration}
 MAX_BATCH_ROWS=1
 HEADERS=(
-    'url'='https://nexus.int.snowflakecomputing.com/service/rest/v1/components'
+    'url'='https://{domain}/service/rest/v1/components'
     'params'='repository={0}'
     'cursor'='continuationToken'
     'results-path'='items'
