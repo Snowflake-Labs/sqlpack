@@ -37,6 +37,8 @@ SELECT
       THEN slack_handler(alert, value)
       WHEN value['type'] = 'ef-jira'
       THEN jira_handler(alert, value)
+      WHEN value['type'] = 'ef-jira-comment'
+      THEN jira_comment_handler(alert, value)
       ELSE OBJECT_CONSTRUCT(
         'error', 'missing handler',
         'handler', value['type']
