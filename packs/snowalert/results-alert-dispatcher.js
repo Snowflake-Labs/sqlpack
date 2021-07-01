@@ -65,7 +65,8 @@ FROM (
 ), LATERAL FLATTEN(input => handlers)
 WHERE value['type'] IN (
   'ef-slack',
-  'ef-jira'
+  'ef-jira',
+  'ef-jira-comment'
 )
 GROUP BY id
 `
