@@ -19,9 +19,9 @@ pipx install sqlpack
 
 ## Using at the CLI
 
-To list the available SQL modules (ETLs) use the `list_packs` command like so :
+To list the available SQL modules (ETLs) use the `list` command like so :
 ```python
-sqlpack list_packs
+sqlpack list
 ```
 
 Use the `print-sample-data` command to see the required parameters for the templated SQL for a built in pack like so:
