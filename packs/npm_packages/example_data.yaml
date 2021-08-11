@@ -1,0 +1,8 @@
+schema: schema_name
+warehouse: eample_warehouse
+api_integration: api_integration_name
+s3_bucket_name: bucket_name
+aws_role_arn: arn:aws:iam::123456789012:role/role_name
+aws_api_gateway_id: a1b2c3
+aws_api_gateway_region: us-west-5
+aws_api_gateway_stage_name: prod

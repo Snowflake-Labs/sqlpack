@@ -1,0 +1,183 @@
+-- ---
+-- params:
+-- - name: schema
+-- - name: warehouse 
+-- - name: api_integration
+-- - name: s3_bucket_name
+-- - name: aws_role_arn
+-- - name: aws_api_gateway_id
+-- - name: aws_api_gateway_region
+-- - name: aws_api_gateway_stage_name
+-- varmap:
+--   url: 'replicate.npmjs.com/_all_docs'
+--   stage_name: '{s3_bucket_name}/npm_packages'
+--   pipe_name: npm_packages
+--   raw_table: npm_packages_raw
+--   invoke_ef_task_name: load_npm_packages
+--   task_run_table: load_npm_packages_task_runs
+--   data_table : npm_packages
+--   stream_name: npm_packages_raw_stream
+--   load_into_landing_task: npm_packages_task
+
+
+
+----------------
+-- npm packages
+----------------
+-- 1. EF
+-- 2. Pipe: To load into raw table
+-- 3. Raw table
+-- 4. Task to invoke external function and load data to raw table
+-- 5. Landing table
+-- 6. Stream to monitor diffs on the raw table
+-- 7. Task to read from stream and write to landing table
+
+USE ROLE security_ingest_rl;
+USE SCHEMA {schema};
+USE WAREHOUSE {warehouse};
+
+-------------------------------
+-- 1.  Create External Function
+-------------------------------
+CREATE OR REPLACE EXTERNAL FUNCTION npm_packages()
+RETURNS VARIANT
+RETURNS NULL ON NULL INPUT
+VOLATILE
+COMMENT='https://github.com/npm/registry/blob/master/docs/REPLICATE-API.md'
+API_INTEGRATION={API_INTEGRATION}
+HEADERS=(
+    'url'='https://{url}'
+    'results-path' = 'rows'
+    'destination-uri' = 's3://{s3_bucket_name}/npm_packages/'
+)
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/https'
+;
+
+-------------
+-- Storage integration for stage
+-------------
+CREATE STORAGE INTEGRATION integration
+  TYPE = external_stage
+  storage_provider = s3
+  storage_aws_role_arn = '{aws_role_arn}'
+  ENABLED = true
+  storage_allowed_locations = ('s3://{s3_bucket_name}/npm_packages/');
+
+
+
+------------
+-- Stage
+------------
+CREATE OR REPLACE STAGE {stage_name}
+  url='s3://{s3_bucket_name}/npm_packages/'
+  storage_integration = integration;
+
+
+----------------------------------
+-- 2. Pipe: To load into raw table
+----------------------------------
+CREATE OR REPLACE PIPE {pipe_name}
+    AUTO_INGEST=TRUE
+AS
+COPY INTO {raw_table}(
+    raw, recorded_at
+)
+FROM (
+    SELECT CURRENT_TIMESTAMP, $1
+    FROM @{stage_name}
+)
+;
+
+---------------
+-- 3. Raw table
+---------------
+CREATE TABLE IF NOT EXISTS {raw_table}(
+    raw VARIANT,
+    recorded_at TIMESTAMP_NTZ
+)
+;
+
+GRANT SELECT
+ON {raw_table}
+TO ROLE security_engineer
+;
+
+GRANT SELECT
+ON {raw_table}
+TO ROLE security_modeling_rl
+;
+
+-------------------------------
+-- 4.  Create task to invoke EF
+-------------------------------
+-- task run table
+CREATE TABLE IF NOT EXISTS {task_run_table}(
+    response VARIANT,
+    recorded_at TIMESTAMP_NTZ
+)
+;
+
+CREATE OR REPLACE TASK {invoke_ef_task_name}
+WAREHOUSE={warehouse}
+SCHEDULE='USING CRON */30 * * * * UTC'
+AS
+INSERT INTO {task_run_table}(
+    response,
+    recorded_at
+)
+SELECT
+  npm_packages() response,
+  CURRENT_TIMESTAMP recorded_at
+;
+ALTER TASK {invoke_ef_task_name} RESUME;
+
+----------------
+-- 5. Data Table
+----------------
+CREATE TABLE IF NOT EXISTS {data_table}(
+    key STRING,
+    rev STRING,
+    recorded_at TIMESTAMP_NTZ,
+    updated_at TIMESTAMP_NTZ
+)
+;
+
+GRANT SELECT ON {data_table}
+TO ROLE security_engineer;
+
+GRANT SELECT ON {data_table}
+TO ROLE security_modeling_rl;
+
+-------------------------
+-- 6. Stream on Raw table
+-------------------------
+CREATE STREAM IF NOT EXISTS {stream_name}
+ON TABLE {raw_table}
+;
+
+----------------------------------------------------------
+-- 7. Task to read from stream and load into landing table
+----------------------------------------------------------
+CREATE OR REPLACE TASK {load_into_landing_task}
+WAREHOUSE={warehouse}
+SCHEDULE='USING CRON * * * * * UTC'
+WHEN
+    SYSTEM$STREAM_HAS_DATA('{stream_name}')
+AS
+MERGE INTO {data_table} dst
+USING (
+    SELECT recorded_at,
+        raw['key']::STRING key,
+        raw['value']:rev::STRING rev
+    FROM {stream_name}
+) src
+ON src.key = dst.key AND src.rev = dst.rev
+WHEN MATCHED THEN UPDATE
+    SET updated_at = CURRENT_TIMESTAMP
+WHEN NOT MATCHED THEN INSERT (
+    key, rev, recorded_at, updated_at
+) VALUES (
+    src.key, src.rev, src.recorded_at, CURRENT_TIMESTAMP
+)
+;
+ALTER TASK {load_into_landing_task} RESUME;
