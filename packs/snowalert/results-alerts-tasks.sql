@@ -1,15 +1,15 @@
 -- 1. Runs the alert queries merge
-CREATE OR REPLACE TASK results.alert_merge -- TODO: Alter rename task
+CREATE OR REPLACE TASK results.alerts_merge
   WAREHOUSE=snowalert_warehouse
   SCHEDULE='USING CRON * * * * * UTC'
 AS
-CALL results.alert_merge('30m')
+CALL results.alerts_merge('30m')
 ;
 
 -- 2. Runs the alerts supressions merge
-CREATE OR REPLACE TASK results.suppresions_merge 
+CREATE OR REPLACE TASK results.suppressions_merge 
   WAREHOUSE=snowalert_warehouse
-  AFTER results.alert_merge
+  AFTER results.alerts_merge
 AS
 CALL results.alert_suppressions_runner()
 ;
