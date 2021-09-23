@@ -12,7 +12,7 @@ function exec(sqlText, binds=[]) {
     columnNames.push(stmnt.getColumnName(i))
   }
 
-  while (result.next()) {
+  while(result.next()) {
     let o = {}
     for (let c of columnNames) {
       o[c] = result.getColumnValue(c)
