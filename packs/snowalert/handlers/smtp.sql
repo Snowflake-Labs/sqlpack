@@ -9,7 +9,7 @@ CREATE OR REPLACE SECURE EXTERNAL FUNCTION snowalert.results.smtp_send(
   API_INTEGRATION={sa_api_integration}
   HEADERS=(
     'auth'              = {smtp_secrets_manager_arn}
-    'sender-email'      = 'SnowAlert <snowalert@snowflake.com>'
+    'sender-email'      = {from_email_address}
     'recipient-email'   = '{0}'
     'subject'           = '{1}'
     'text'              = '{2}'
