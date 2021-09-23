@@ -8,7 +8,7 @@ function exec(sqlText, binds=[]) {
   const result = stmnt.execute()
   const columnCount = stmnt.getColumnCount()
   const columnNames = []
-  for (let i = 1; i < columnCount + 1; i++) {
+  for (let i = 1 ; i < columnCount + 1 ; i++) {
     columnNames.push(stmnt.getColumnName(i))
   }
 
