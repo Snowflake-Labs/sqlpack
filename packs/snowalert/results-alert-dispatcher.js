@@ -87,6 +87,6 @@ return {
   'handled':
     exec(COUNT_HANDLED)[0]['N'] > 0
       ? exec(HANDLE_ALL)
-      : { "number of rows updated": 0, "number of rows inserted": 0 },
+      : { 'number of rows updated': 0, 'number of rows inserted': 0 },
   'dropped': exec("DROP TABLE results.handled_alerts"),
 };
