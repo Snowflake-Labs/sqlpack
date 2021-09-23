@@ -7,14 +7,14 @@ function exec(sqlText, binds=[]) {
   let retval = []
   const stmnt = snowflake.createStatement({sqlText, binds})
   const result = stmnt.execute()
-  const columnCount = stmnt.getColumnCount();
+  const columnCount = stmnt.getColumnCount()
   const columnNames = []
   for (let i = 1 ; i < columnCount + 1 ; i++) {
     columnNames.push(stmnt.getColumnName(i))
   }
 
   while(result.next()) {
-    let o = {};
+    let o = {}
     for (let c of columnNames) {
       o[c] = result.getColumnValue(c)
     }
@@ -39,6 +39,8 @@ SELECT
       THEN jira_handler(alert, value)
       WHEN value['type'] = 'ef-jira-comment'
       THEN jira_comment_handler(alert, value)
+      WHEN value['type'] = 'ef-smtp'
+      THEN smtp_handler(value)
       ELSE OBJECT_CONSTRUCT(
         'error', 'missing handler',
         'handler', value['type']
@@ -66,7 +68,8 @@ FROM (
 WHERE value['type'] IN (
   'ef-slack',
   'ef-jira',
-  'ef-jira-comment'
+  'ef-jira-comment',
+  'ef-smtp'
 )
 GROUP BY id
 `
@@ -82,10 +85,9 @@ WHEN MATCHED THEN UPDATE SET d.handled=s.handled
 
 return {
   'handle_alerts': exec(HANDLE_ALERTS),
-  'handled': (
+  'handled':
     exec(COUNT_HANDLED)[0]['N'] > 0
       ? exec(HANDLE_ALL)
-      : {'number of rows updated': 0, 'number of rows inserted': 0}
-  ),
+      : { 'number of rows updated': 0, 'number of rows inserted': 0 },
   'dropped': exec('DROP TABLE results.handled_alerts'),
 }
