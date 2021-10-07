@@ -1,0 +1,139 @@
+-- ---
+-- params:
+-- - name: aws_api_gateway_id
+-- - name: aws_api_gateway_region
+-- - name: aws_api_gateway_stage_name
+-- - name: snowflake_api_integration
+-- - name: warehouse
+-- - name: domain
+-- varmap:
+--   data_table: 'nexus_packages'
+--   raw_table: '{data_table}_raw'
+--   stream_name: '{data_table}_raw_stream'
+--   load_raw_table_task: 'nexus_repos_and_packages_raw_task'
+--   load_data_table_task: '{data_table}_task'
+
+
+---------------------
+-- 1. EF to get repos
+---------------------
+CREATE OR REPLACE EXTERNAL FUNCTION nexus_get_repos()
+RETURNS VARIANT
+API_INTEGRATION={snowflake_api_integration}
+HEADERS = (
+    'url'='https://{domain}/service/rest/v1/repositories'
+)
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/https'
+;
+
+----------------------------------------------
+-- 2. EF to get packages for a given repo name
+----------------------------------------------
+CREATE OR REPLACE EXTERNAL FUNCTION nexus_get_packages_for_repo(repo_name STRING)
+RETURNS VARIANT
+RETURNS NULL ON NULL INPUT
+VOLATILE
+API_INTEGRATION={snowflake_api_integration}
+MAX_BATCH_ROWS=1
+HEADERS=(
+    'url'='https://{domain}/service/rest/v1/components'
+    'params'='repository={0}'
+    'cursor'='continuationToken'
+    'results-path'='items'
+)
+AS 'https://{aws_api_gateway_id}.execute-api.{aws_api_gateway_region}.amazonaws.com/{aws_api_gateway_stage_name}/https'
+;
+
+---------------
+-- 3. Raw table
+---------------
+CREATE TABLE IF NOT EXISTS {raw_table}(
+    repo VARIANT,
+    recorded_at TIMESTAMP_NTZ
+)
+;
+
+----------------------------
+-- 4. Task to load raw table
+----------------------------
+CREATE OR REPLACE TASK {load_raw_table_task}
+    WAREHOUSE={warehouse}
+    SCHEDULE='USING CRON */5 * * * * UTC'
+AS
+INSERT INTO {raw_table}(repo, recorded_at)
+SELECT value, CURRENT_TIMESTAMP
+FROM (
+    SELECT nexus_get_packages_for_repo(value:name::STRING) repo
+    FROM (
+        SELECT nexus_get_repos() result
+    ),
+    LATERAL FLATTEN(INPUT => result)
+    WHERE value:format IN ('npm', 'pypi')
+        AND value:type = 'hosted'
+),
+LATERAL FLATTEN(INPUT => repo)
+;
+
+ALTER TASK {load_raw_table_task} RESUME
+;
+
+-------------------------
+-- 5. Stream on Raw table
+-------------------------
+CREATE OR REPLACE STREAM {stream_name}
+ON TABLE {raw_table}
+;
+
+----------------
+-- 6. Data Table
+----------------
+
+CREATE TABLE IF NOT EXISTS {data_table}(
+    registry STRING,
+    namespace STRING,
+    pkg_name STRING,
+    repository STRING,
+    recorded_at TIMESTAMP_NTZ,
+    updated_at TIMESTAMP_NTZ
+);
+
+-------------------------------------------------------
+-- 7. Task to read from stream and load into data table
+-------------------------------------------------------
+
+CREATE OR REPLACE TASK {load_data_table_task}
+    WAREHOUSE={warehouse}
+    SCHEDULE='USING CRON * * * * * UTC'
+WHEN
+    SYSTEM$STREAM_HAS_DATA('{stream_name}')
+AS
+MERGE INTO {data_table} dst
+USING (
+    SELECT repo['format']::STRING pkg_format,
+        IFNULL(repo['group']::STRING, '') pkg_group,
+        repo['name']::STRING pkg_name,
+        repo['repository']::STRING pkg_repository,
+        recorded_at
+    FROM {stream_name}
+    QUALIFY 1=ROW_NUMBER() OVER (
+        PARTITION BY pkg_format, pkg_group, pkg_name, pkg_repository
+        ORDER BY recorded_at DESC
+    )
+) src
+    ON src.pkg_format = dst.registry
+    AND src.pkg_group = dst.namespace
+    AND src.pkg_name = dst.pkg_name
+    AND src.pkg_repository = dst.repository
+WHEN MATCHED THEN UPDATE SET updated_at = src.recorded_at
+WHEN NOT MATCHED THEN INSERT (
+    registry, namespace, pkg_name, repository, recorded_at, updated_at
+) VALUES (
+    src.pkg_format,
+    src.pkg_group,
+    src.pkg_name,
+    src.pkg_repository,
+    src.recorded_at,
+    CURRENT_TIMESTAMP
+)
+;
+ALTER TASK {load_data_table_task} RESUME;

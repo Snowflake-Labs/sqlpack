@@ -1,0 +1,6 @@
+aws_api_gateway_id: a1b2c3
+aws_api_gateway_region: us-west-2
+aws_api_gateway_stage_name: prod
+domain: nexus.com
+snowflake_api_integration: example_api_integration
+warehouse: example_wh
