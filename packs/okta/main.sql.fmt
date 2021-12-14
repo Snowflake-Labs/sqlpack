@@ -29,10 +29,10 @@
 -- landing tables for data and views to reference it
 
 CREATE OR REPLACE TABLE {landing_log_table} (
-    recorded_At TIMESTAMP_LTZ (9),
+    recorded_at TIMESTAMP_NTZ,
     raw VARIANT,
     uuid STRING,
-    published TIMESTAMP_LTZ,
+    published TIMESTAMP_NTZ,
     eventType STRING,
     version STRING,
     severity STRING,
@@ -50,28 +50,28 @@ CREATE OR REPLACE TABLE {landing_log_table} (
 );
 
 CREATE OR REPLACE TABLE {landing_user_table} (
-    recorded_At TIMESTAMP_LTZ(9),
+    recorded_at TIMESTAMP_NTZ,
     raw VARIANT,
     id STRING,
     status STRING,
-    created TIMESTAMP_LTZ,
-    activated TIMESTAMP_LTZ,
-    statusChanged TIMESTAMP_LTZ,
-    lastLogin TIMESTAMP_LTZ,
-    lastUpdated TIMESTAMP_LTZ,
-    passwordChanged TIMESTAMP_LTZ,
+    created TIMESTAMP_NTZ,
+    activated TIMESTAMP_NTZ,
+    statusChanged TIMESTAMP_NTZ,
+    lastLogin TIMESTAMP_NTZ,
+    lastUpdated TIMESTAMP_NTZ,
+    passwordChanged TIMESTAMP_NTZ,
     profile VARIANT,
     credentials VARIANT,
     _links VARIANT
 );
 
 CREATE OR REPLACE TABLE {landing_group_table} (
-    recorded_At TIMESTAMP_LTZ(9),
+    recorded_at TIMESTAMP_NTZ,
     raw VARIANT,
     id STRING,
-    created TIMESTAMP_LTZ,
-    lastUpdated TIMESTAMP_LTZ,
-    lastMembershipUpdated TIMESTAMP_LTZ,
+    created TIMESTAMP_NTZ,
+    lastUpdated TIMESTAMP_NTZ,
+    lastMembershipUpdated TIMESTAMP_NTZ,
     objectClass VARIANT,
     type STRING,
     profile VARIANT,
@@ -83,10 +83,10 @@ CREATE OR REPLACE TABLE {landing_group_table} (
 CREATE OR REPLACE VIEW okta_snowbiz_users_latest AS
 SELECT *
 FROM {landing_user_table}
-WHERE recorded_At > CURRENT_TIMESTAMP - INTERVAL '24 hours'
+WHERE recorded_at > CURRENT_TIMESTAMP - INTERVAL '24 hours'
 QUALIFY 1=ROW_NUMBER() OVER (
   PARTITION BY profile:login
-  ORDER BY recorded_At DESC
+  ORDER BY recorded_at DESC
 )
 ;
 
@@ -126,7 +126,7 @@ $$
 
 -- logs
 
-CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_logs(since TIMESTAMP_LTZ, limit NUMBER) RETURNS VARIANT
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_logs(since TIMESTAMP_NTZ, limit NUMBER) RETURNS VARIANT
 AS $$
   okta_api_{connection_name}(
     '/api/v1/logs',
@@ -139,7 +139,7 @@ AS $$
 $$
 ;
 
-CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_logs(since TIMESTAMP_LTZ) RETURNS VARIANT
+CREATE OR REPLACE SECURE FUNCTION okta_api_{connection_name}_logs(since TIMESTAMP_NTZ) RETURNS VARIANT
 AS $$
   okta_api_{connection_name}_logs(since, 500)
 $$
@@ -201,7 +201,7 @@ WHEN NOT MATCHED THEN INSERT VALUES (
   CURRENT_TIMESTAMP,
   src.value,
   src.value:uuid::STRING,
-  src.value:published::TIMESTAMP_LTZ,
+  src.value:published::TIMESTAMP_NTZ,
   src.value:eventType::STRING,
   src.value:version::STRING,
   src.value:severity::STRING,
@@ -231,12 +231,12 @@ SELECT
   value raw,
   raw:id::STRING id,
   raw:status::STRING status,
-  raw:created::TIMESTAMP_LTZ created,
-  raw:activated::TIMESTAMP_LTZ activated,
-  raw:statusChanged::TIMESTAMP_LTZ status_changed,
-  raw:lastLogin::TIMESTAMP_LTZ last_login,
-  raw:lastUpdated::TIMESTAMP_LTZ last_updated,
-  raw:passwordChanged::TIMESTAMP_LTZ password_changed,
+  raw:created::TIMESTAMP_NTZ created,
+  raw:activated::TIMESTAMP_NTZ activated,
+  raw:statusChanged::TIMESTAMP_NTZ status_changed,
+  raw:lastLogin::TIMESTAMP_NTZ last_login,
+  raw:lastUpdated::TIMESTAMP_NTZ last_updated,
+  raw:passwordChanged::TIMESTAMP_NTZ password_changed,
   raw:profile::VARIANT profile,
   raw:credentials::VARIANT credentials,
   raw:_links::VARIANT links
@@ -256,9 +256,9 @@ SELECT
   CURRENT_TIMESTAMP,
   value raw,
   raw:id::STRING id,
-  raw:created::TIMESTAMP_LTZ created,
-  raw:lastUpdated::TIMESTAMP_LTZ lastUpdated,
-  raw:lastMembershipUpdated::TIMESTAMP_LTZ lastMembershipUpdated,
+  raw:created::TIMESTAMP_NTZ created,
+  raw:lastUpdated::TIMESTAMP_NTZ lastUpdated,
+  raw:lastMembershipUpdated::TIMESTAMP_NTZ lastMembershipUpdated,
   raw:objectClass::VARIANT objectClass,
   raw:type::STRING type,
   raw:profile::VARIANT profile,
