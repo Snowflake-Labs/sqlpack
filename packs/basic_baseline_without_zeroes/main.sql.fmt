@@ -1,0 +1,226 @@
+-- ---
+-- params:
+-- - name: base_table
+-- - name: warehouse
+-- - name: lookback_time_in_days
+--   default: 90
+-- - name: time_column
+-- - name: groupby_columns
+-- varmap:
+--   target_table: '{base_table}_counts'
+--   task_name: '{base_table}_count'
+
+CREATE OR REPLACE TABLE {target_table} (
+    slice_start timestamp_ltz,
+    slice_end timestamp_ltz,
+    groups variant,
+    n number
+);
+
+
+CREATE FUNCTION IF NOT EXISTS time_slices (
+    n NUMBER, 
+    s TIMESTAMP_NTZ, 
+    e TIMESTAMP_NTZ
+)
+RETURNS TABLE (
+    slice_start TIMESTAMP_NTZ,
+    slice_end TIMESTAMP_NTZ
+)
+AS 
+$$
+SELECT
+  DATEADD(
+      sec,
+      DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
+        ORDER BY SEQ4()
+    ) / n,
+    s
+  ) AS slice_start,
+  DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
+FROM
+    TABLE(GENERATOR(ROWCOUNT => n)) 
+$$;
+
+
+CREATE FUNCTION IF NOT EXISTS time_slices (
+    n NUMBER, 
+    s TIMESTAMP_LTZ, 
+    e TIMESTAMP_LTZ
+)
+RETURNS TABLE (
+    slice_start TIMESTAMP_LTZ,
+    slice_end TIMESTAMP_LTZ
+)
+AS 
+$$
+SELECT
+  DATEADD(
+    sec,
+    DATEDIFF(sec, s, e) * ROW_NUMBER() OVER (
+      ORDER BY SEQ4()
+    ) / n,
+    s
+  ) AS slice_start,
+  DATEADD(sec, DATEDIFF(sec, s, e) * 1 / n, slice_start) AS slice_end
+FROM 
+    TABLE(GENERATOR(ROWCOUNT => n))
+$$;
+
+
+CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
+    num_slices NUMBER,
+    seconds_in_slice NUMBER,
+    t TIMESTAMP_NTZ
+) 
+RETURNS TABLE (
+    slice_start TIMESTAMP_NTZ,
+    slice_end TIMESTAMP_NTZ
+)
+AS 
+$$
+SELECT
+  slice_start,
+  slice_end
+FROM TABLE(
+    time_slices(
+        num_slices,
+        DATEADD(sec, - seconds_in_slice * num_slices, t),
+      t
+    )
+  )
+$$;
+
+
+CREATE FUNCTION IF NOT EXISTS time_slices_before_t (
+    num_slices NUMBER,
+    seconds_in_slice NUMBER,
+    t TIMESTAMP_LTZ
+)
+RETURNS TABLE (
+    slice_start TIMESTAMP_LTZ,
+    slice_end TIMESTAMP_LTZ
+)
+AS 
+$$
+SELECT
+  slice_start,
+  slice_end
+FROM TABLE
+(
+    time_slices (
+      num_slices,
+      DATEADD(sec, - seconds_in_slice * num_slices, t),
+      t
+    )
+  )
+$$;
+    
+    
+CREATE OR REPLACE TASK {task_name} 
+SCHEDULE = 'USING CRON 0 * * * * UTC' 
+WAREHOUSE = {warehouse} 
+AS 
+MERGE INTO {target_table} stored USING (
+    -- calculate sums
+    SELECT
+        COUNT(*) n,
+        slice_start,
+        slice_end,
+        groups
+    FROM
+        (
+            -- make the slices
+            SELECT
+                slice_start,
+                slice_end
+            FROM
+                TABLE (
+                    TIME_SLICES_BEFORE_T (
+                        {lookback_time_in_days} * 24,
+                        60 * 60,
+                        DATE_TRUNC(HOUR, CURRENT_TIMESTAMP())
+                    )
+                )
+        ) t
+        JOIN (
+            -- calculate sums in those slices
+            SELECT
+                {time_column} event_time,
+                OBJECT_CONSTRUCT({groupby_columns}) AS groups
+            FROM
+                {base_table}
+        ) c ON c.event_time BETWEEN t.slice_start
+        AND t.slice_end
+    GROUP BY
+        slice_start,
+        slice_end,
+        groups
+) calcd ON (
+    stored.groups = calcd.groups
+    AND stored.slice_start = calcd.slice_start
+    AND stored.slice_end = calcd.slice_end
+)
+WHEN NOT MATCHED THEN
+INSERT (
+    slice_start,
+    slice_end,
+    groups, 
+    n
+)
+VALUES (
+    slice_start,
+    slice_end,
+    groups,
+    n
+);
+    
+    
+ALTER TASK {task_name} RESUME;
+  
+ 
+--BASIC_BASELINE_VIEW_NO_ZEROS
+CREATE OR REPLACE VIEW {base_table}_pct_baseline_wo_zeroes 
+COPY GRANTS AS
+SELECT
+    *
+FROM (
+    SELECT
+        slice,
+        groups,
+        n,
+        APPROX_PERCENTILE_ESTIMATE(pct,.01) pct01,
+        APPROX_PERCENTILE_ESTIMATE(pct,.05) pct05,
+        APPROX_PERCENTILE_ESTIMATE(pct,.10) pct10,
+        APPROX_PERCENTILE_ESTIMATE(pct,.50) pct50,
+        APPROX_PERCENTILE_ESTIMATE(pct,.90) pct90,
+        APPROX_PERCENTILE_ESTIMATE(pct,.95) pct95,
+        APPROX_PERCENTILE_ESTIMATE(pct,.99) pct99
+    FROM (
+        SELECT
+            slice_start slice,
+            current_hour,
+            ZEROIFNULL(n) n,
+            groups,
+            pct
+        FROM
+            {target_table}
+            RIGHT OUTER JOIN (
+                SELECT
+                    groups,
+                    DATE_TRUNC(HOUR, CURRENT_TIMESTAMP()) current_hour,
+                    APPROX_PERCENTILE_ACCUMULATE(n) OVER (
+                        PARTITION BY GROUPS
+                    ) pct
+                FROM
+                    {target_table}
+                WHERE
+                    slice_start BETWEEN DATEADD(HOUR, -24 * {lookback_time_in_days} - 1, current_hour)
+                    AND DATEADD(HOUR, -1, current_hour)
+            ) USING (groups)
+        WHERE
+            slice = current_hour
+    )
+)
+
+
