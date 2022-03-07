@@ -39,6 +39,10 @@ SELECT
       THEN jira_handler(alert, value)
       WHEN value['type'] = 'ef-jira-comment'
       THEN jira_comment_handler(alert, value)
+      WHEN value['type'] = 'servicenow-create-incident'
+      THEN servicenow_create_incident_handler(alert, value)
+      WHEN value['type'] = 'dev-servicenow-create-incident'
+      THEN dev_servicenow_create_incident_handler(alert, value)
       WHEN value['type'] = 'ef-smtp'
       THEN smtp_handler(value)
       ELSE OBJECT_CONSTRUCT(
@@ -69,7 +73,9 @@ WHERE value['type'] IN (
   'ef-slack',
   'ef-jira',
   'ef-jira-comment',
-  'ef-smtp'
+  'ef-smtp',
+  'servicenow-create-incident',
+  'dev-servicenow-create-incident'
 )
 GROUP BY id
 `
