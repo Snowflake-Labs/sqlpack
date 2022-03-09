@@ -68,6 +68,7 @@ FROM (
       IS_OBJECT(handlers)
       OR IS_ARRAY(handlers)
    )
+   LIMIT 1
 ), LATERAL FLATTEN(input => handlers)
 WHERE value['type'] IN (
   'ef-slack',
