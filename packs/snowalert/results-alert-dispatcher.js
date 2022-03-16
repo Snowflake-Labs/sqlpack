@@ -46,7 +46,8 @@ SELECT
   id alert_id,
   alert,
   value['type'] handler_type,
-  value handler_payload
+  value handler_payload,
+  index handler_num
 FROM (
   SELECT
     id,
@@ -64,6 +65,7 @@ FROM (
       IS_OBJECT(handlers)
       OR IS_ARRAY(handlers)
    )
+   LIMIT 10
 ), LATERAL FLATTEN(input => handlers)
 `
 
@@ -72,9 +74,17 @@ return exec(GET_HANDLERS).rows.map((h) => {
   const alert = JSON.stringify(h.ALERT)
   const payload = JSON.stringify(h.HANDLER_PAYLOAD)
   const alert_id = h.ALERT_ID
+  const handler_num = h.HANDLER_NUM
   
   const result = exec(
-    `UPDATE results.alerts SET handled=${handler_name}(PARSE_JSON(?), PARSE_JSON(?)) WHERE alert_id=?`,
+    `UPDATE results.alerts
+     SET handled = results.array_set(
+       handled,
+       ${handler_num},
+       ${handler_name}(PARSE_JSON(?), PARSE_JSON(?))
+     )
+     WHERE alert_id=?
+    `,
     [alert, payload, alert_id]
   )
   
