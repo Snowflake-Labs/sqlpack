@@ -45,9 +45,12 @@ GET_HANDLERS = `
 SELECT
   id alert_id,
   alert,
+  alert_time,
   value['type'] handler_type,
+  IFNULL(value['ttl_minutes'], 24*60) handler_ttl,
   value handler_payload,
-  index handler_num
+  index handler_num,
+  handled[index] handled_payload
 FROM (
   SELECT
     id,
@@ -55,18 +58,21 @@ FROM (
       IS_OBJECT(handlers),
       ARRAY_CONSTRUCT(handlers),
       handlers
-    ) handlers,
+    ) handler_payloads,
+    handled,
+    alert_time,
     OBJECT_CONSTRUCT(*) alert
   FROM data.alerts
-  WHERE handled IS NULL
-    AND ticket IS NULL
-    AND suppressed = FALSE
-    AND (
-      IS_OBJECT(handlers)
-      OR IS_ARRAY(handlers)
+  WHERE suppressed = FALSE
+    AND IS_ARRAY(handler_payloads)
+), LATERAL FLATTEN(input => handler_payloads)
+WHERE alert_time > TIMEADD(MINUTES, -handler_ttl, CURRENT_TIMESTAMP)
+   AND (
+     handled_payload IS NULL
+     OR IS_NULL_VALUE(handled_payload)
    )
-   LIMIT 10
-), LATERAL FLATTEN(input => handlers)
+ORDER BY handler_ttl
+LIMIT 100
 `
 
 return exec(GET_HANDLERS).rows.map((h) => {
