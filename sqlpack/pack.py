@@ -84,7 +84,10 @@ def read_template_header(template):
         re.sub("^-- ", "", l) for l in takewhile(lambda s: s.startswith("-- "), lines)
     )
     header = yaml.safe_load(head)
-    return header['varmap'], header['params']
+    try:
+        return header['varmap'], header['params']
+    except KeyError:
+        return "", header['params']
 
 
 def find_file(file_name, possible_paths, parent_dir='.'):
@@ -115,7 +118,10 @@ def print_sql(pack_name, data_file=None, **kwargs):
     pack_dir = path.dirname(pack_file)
     defaults = {p['name']: p['default'] for p in params if 'default' in p}
     for file_datum in file_data:
-        args = defaults | varmap | file_datum | kwargs
+        if varmap:
+            args = defaults | varmap | file_datum | kwargs
+        else:
+            args = defaults | file_datum | kwargs
         missing_params = validate_params(params, args)
         if not missing_params:
             print(expand_macros(pack_dir, format(template_text, args)))
