@@ -1,0 +1,6 @@
+base_table: okta_logs
+warehouse: ingestion_wh
+lookback_time_in_days: 10
+time_column: event_time
+groupby_columns: "'city', location:city, 'users', profile:username"
+ 
