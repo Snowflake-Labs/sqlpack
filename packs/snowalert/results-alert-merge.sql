@@ -1,0 +1,6 @@
+CREATE OR REPLACE PROCEDURE results.alert_merge(deduplication_offset STRING)
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+USING TEMPLATE 'results-alert-merge.js'
+;
