@@ -1,0 +1,84 @@
+-- ---
+-- params:
+-- - name: table_name
+-- - name: warehouse
+-- varmap:
+--   copy_history_table_name: '{table_name}_copy_history'
+--   task_name: '{copy_history_table_name}_task'
+
+CREATE TABLE IF NOT EXISTS {copy_history_table_name} ( 
+    recorded_at TIMESTAMP_LTZ,
+    lastseen_at TIMESTAMP_LTZ,
+    file_name TEXT,
+    stage_location TEXT,
+    last_load_time TIMESTAMP_LTZ,
+    row_count NUMBER,
+    row_parsed NUMBER,
+    file_size NUMBER,
+    first_error_message TEXT,
+    first_error_line_number NUMBER,
+    first_error_character_pos NUMBER,
+    first_error_columnName TEXT,
+    error_count NUMBER,
+    error_limit NUMBER,
+    status TEXT,
+    table_catalog_name TEXT,
+    table_schema_name TEXT,
+    table_name TEXT,
+    pipe_catalog_name TEXT,
+    pipe_schema_name TEXT,
+    pipe_name TEXT,
+    pipe_received_time TIMESTAMP_LTZ
+);
+
+
+CREATE OR REPLACE TASK {task_name}
+WAREHOUSE = {warehouse}
+SCHEDULE = 'USING CRON * * * * * UTC' 
+AS
+MERGE INTO {copy_history_table_name} tgt USING
+    ( 
+        SELECT 
+            CURRENT_TIMESTAMP() new,
+            OBJECT_CONSTRUCT(*) raw
+        FROM TABLE (
+            information_schema.copy_history ( 
+                table_name=> '{table_name}', 
+                start_time=> dateadd(hours, -24, current_timestamp()) 
+                ) 
+            ) 
+    ) src 
+ON ( 
+        tgt.file_name = src.raw:FILE_NAME
+        and tgt.status= src.raw:STATUS 
+    ) 
+WHEN MATCHED THEN
+UPDATE SET 
+    tgt.lastseen_at = src.new
+WHEN NOT MATCHED THEN
+INSERT VALUES ( 
+    src.new::TIMESTAMP_LTZ,
+    src.new::TIMESTAMP_LTZ,
+    src.raw:FILE_NAME::TEXT,
+    src.raw:STAGE_LOCATION::TEXT,
+    src.raw:LAST_LOAD_TIME::TIMESTAMP_LTZ,
+    src.raw:ROW_COUNT::NUMBER,
+    src.raw:ROW_PARSED::NUMBER,
+    src.raw:FILE_SIZE::NUMBER,
+    src.raw:FIRST_ERROR_MESSAGE::TEXT,
+    src.raw:FIRST_ERROR_LINE_NUMBEcR::NUMBER,
+    src.raw:FIRST_ERROR_CHARACTER_POS::NUMBER,
+    src.raw:FIRST_ERROR_COLUMN_NAME::TEXT,
+    src.raw:ERROR_COUNT::NUMBER,
+    src.raw:ERROR_LIMIT::NUMBER,
+    src.raw:STATUS::TEXT,
+    src.raw:TABLE_CATALOG_NAME::TEXT,
+    src.raw:TABLE_SCHEMA_NAME::TEXT,
+    src.raw:TABLE_NAME::TEXT,
+    src.raw:PIPE_CATALOG_NAME::TEXT,
+    src.raw:PIPE_SCHEMA_NAME::TEXT,
+    src.raw:PIPE_NAME::TEXT,
+    src.raw:PIPE_RECEIVED_TIME::TIMESTAMP_LTZ 
+);
+
+ALTER TASK {task_name} RESUME ;
