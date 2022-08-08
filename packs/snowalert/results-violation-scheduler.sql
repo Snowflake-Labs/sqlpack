@@ -1,0 +1,7 @@
+CREATE OR REPLACE PROCEDURE results.violation_scheduler("WAREHOUSE" VARCHAR(16777216))
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+COMMENT='user-defined procedure'
+EXECUTE AS CALLER
+USING TEMPLATE 'results-violation-scheduler.js'
+;
