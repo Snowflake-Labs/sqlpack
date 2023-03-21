@@ -1,0 +1,6 @@
+CREATE OR REPLACE PROCEDURE results.alert_processor()
+RETURNS VARIANT
+LANGUAGE JAVASCRIPT
+EXECUTE AS CALLER
+USING TEMPLATE 'results-alert-processor.js'
+;
